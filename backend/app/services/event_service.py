@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import ClinicalEvent, EvidenceLink
+from app.models import ClinicalDocument, ClinicalEvent, ClinicalFact, EventEvidence, EvidenceLink, Patient
 from app.services.errors import api_error
 
 
@@ -12,7 +12,10 @@ def get_event_or_404(db: Session, event_id: int) -> ClinicalEvent:
         select(ClinicalEvent)
         .options(
             selectinload(ClinicalEvent.patient),
+            selectinload(ClinicalEvent.patient).selectinload(Patient.clinical_documents),
+            selectinload(ClinicalEvent.patient).selectinload(Patient.clinical_facts).selectinload(ClinicalFact.document),
             selectinload(ClinicalEvent.evidence_links).selectinload(EvidenceLink.lab_result),
+            selectinload(ClinicalEvent.typed_evidence),
         )
         .where(ClinicalEvent.id == event_id)
     ).scalar_one_or_none()
@@ -82,6 +85,8 @@ def build_event_detail(event: ClinicalEvent) -> dict[str, object]:
             "time_difference_hours": (current.observed_at - previous.observed_at).total_seconds() / 3600,
         }
 
+    document_evidence = _build_document_evidence(event)
+
     return {
         "id": event.id,
         "patient": {
@@ -101,4 +106,67 @@ def build_event_detail(event: ClinicalEvent) -> dict[str, object]:
         "resolved_at": event.resolved_at,
         "analysis": analysis,
         "evidence": evidence,
+        "document_evidence": document_evidence,
     }
+
+
+def _build_document_evidence(event: ClinicalEvent) -> list[dict[str, object]]:
+    typed_evidence = sorted(event.typed_evidence, key=lambda item: (item.relation_type, item.target_type, item.id))
+    if not typed_evidence:
+        return []
+
+    fact_ids = [item.target_id for item in typed_evidence if item.target_type == "clinical_fact"]
+    document_ids = [item.target_id for item in typed_evidence if item.target_type == "clinical_document"]
+
+    facts: dict[int, ClinicalFact] = {}
+    documents: dict[int, ClinicalDocument] = {}
+    if fact_ids:
+        for fact in event.patient.clinical_facts:
+            if fact.id in fact_ids:
+                facts[fact.id] = fact
+                documents[fact.document.id] = fact.document
+    if document_ids:
+        for document in event.patient.clinical_documents:
+            if document.id in document_ids:
+                documents[document.id] = document
+
+    def document_payload(document: ClinicalDocument) -> dict[str, object]:
+        return {
+            "id": document.id,
+            "document_type": document.document_type,
+            "title": document.title,
+            "source_document": document.source_document,
+            "authored_at": document.authored_at,
+            "is_synthetic": document.is_synthetic,
+        }
+
+    items = []
+    for evidence_item in typed_evidence:
+        item: dict[str, object] = {
+            "event_evidence_id": evidence_item.id,
+            "target_type": evidence_item.target_type,
+            "target_id": evidence_item.target_id,
+            "relation_type": evidence_item.relation_type,
+            "clinical_fact": None,
+            "clinical_document": None,
+        }
+        if evidence_item.target_type == "clinical_fact" and evidence_item.target_id in facts:
+            fact = facts[evidence_item.target_id]
+            item["clinical_fact"] = {
+                "id": fact.id,
+                "fact_type": fact.fact_type,
+                "subject": fact.subject,
+                "polarity": fact.polarity,
+                "value": fact.value,
+                "status": fact.status,
+                "source_section": fact.source_section,
+                "source_line": fact.source_line,
+                "source_start_char": fact.source_start_char,
+                "source_end_char": fact.source_end_char,
+                "observed_at": fact.observed_at,
+                "document": document_payload(fact.document),
+            }
+        if evidence_item.target_type == "clinical_document" and evidence_item.target_id in documents:
+            item["clinical_document"] = document_payload(documents[evidence_item.target_id])
+        items.append(item)
+    return items

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { runPrototypeAnalysis } from "../api/analysis";
+import { runContradictionAnalysis, runPrototypeAnalysis } from "../api/analysis";
 import { fetchDeviceState } from "../api/device";
 import { fetchPatients } from "../api/patients";
 import { DeviceStateCard } from "../components/DeviceStateCard";
@@ -45,8 +45,12 @@ export function PatientOverviewPage() {
     setError(null);
     try {
       const result = await runPrototypeAnalysis();
+      const contradictionResult = await runContradictionAnalysis();
       await load();
-      setMessage(`原型分析已完成。新增 ${result.events_created} 筆事件，略過重複 ${result.events_skipped_as_duplicates} 筆。`);
+      setMessage(
+        `原型分析已完成。檢驗新增 ${result.events_created} 筆、矛盾新增 ${contradictionResult.events_created} 筆；` +
+          `略過重複 ${result.events_skipped_as_duplicates + contradictionResult.events_skipped_as_duplicates} 筆。`
+      );
     } catch {
       setError("分析執行失敗，請檢查後端服務。");
     } finally {

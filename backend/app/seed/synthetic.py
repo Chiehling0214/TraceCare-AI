@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import LabResult, Patient
+from app.seed.synthetic_documents import seed_synthetic_documents
 
 
 def _dt(value: str) -> datetime:
@@ -73,8 +74,10 @@ def seed_synthetic_data(db: Session) -> dict[str, int]:
             labs_created += 1
 
     db.commit()
+    document_result = seed_synthetic_documents(db)
     return {
         "patients_created": patients_created,
         "lab_results_created": labs_created,
         "duplicates_skipped": duplicates_skipped,
+        **document_result,
     }

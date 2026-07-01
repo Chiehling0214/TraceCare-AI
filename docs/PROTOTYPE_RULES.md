@@ -48,3 +48,51 @@ The output must use the wording:
 "Prototype rule triggered. Human review is required."
 
 It must not state that the patient has a diagnosis or requires treatment.
+
+## ALLERGY_CONTRADICTION
+
+### Rule ID
+
+ALLERGY_CONTRADICTION
+
+### Supported Facts
+
+Fixed-format synthetic `ALLERGY_STATEMENT` facts only.
+
+### Input
+
+Two or more structured allergy facts from the same synthetic patient. Sprint 1 compares facts with the same `subject`.
+
+### Prototype Trigger
+
+Trigger when the same patient has both:
+
+- a `PRESENT` allergy statement for a subject, and
+- a `NEGATED` allergy statement for the same subject.
+
+### Output
+
+- event_type: CONTRADICTION
+- severity: REVIEW_REQUIRED
+- status: OPEN
+
+### Required Evidence Links
+
+Typed `EventEvidence` records must include:
+
+- present fact: ASSERTED_FACT
+- denied fact: DENIED_FACT
+- both facts: SUPPORTS
+- both source documents: SOURCE_DOCUMENT
+
+### Deduplication
+
+The same present-fact ID plus denied-fact ID must not create the same contradiction event twice.
+
+### Safety
+
+The output must use the wording:
+
+"Prototype rule triggered. Human review is required."
+
+It must not state that the patient has an allergy diagnosis, a confirmed chart error, or a treatment requirement.

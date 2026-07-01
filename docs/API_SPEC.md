@@ -921,3 +921,139 @@ It must not be used for diagnosis or treatment decisions.
 All patient data included in Sprint 0 is synthetic.
 The RAPID_INCREASE rule is a synthetic demonstration rule and is not a validated clinical rule.
 ```
+
+---
+
+# 18. Sprint 1 API Addendum
+
+Sprint 1 extends the Sprint 0 API without removing or renaming existing fields.
+
+## 18.1 New Enumerations
+
+Additional event type:
+
+```text
+CONTRADICTION
+```
+
+Additional rule ID:
+
+```text
+ALLERGY_CONTRADICTION
+```
+
+Additional typed evidence relation types:
+
+```text
+ASSERTED_FACT
+DENIED_FACT
+SOURCE_DOCUMENT
+```
+
+## 18.2 Documents and Facts
+
+```http
+GET /api/patients/{patient_id}/documents
+GET /api/documents/{document_id}
+GET /api/patients/{patient_id}/facts
+```
+
+Document responses include `id`, `patient_id`, `document_type`, `title`, `source_document`, `authored_at`, `created_at`, and `is_synthetic`.
+
+Fact responses include source traceability fields: `source_section`, `source_line`, `source_start_char`, `source_end_char`, and `observed_at`.
+
+Unknown patients return `PATIENT_NOT_FOUND`. Unknown documents return `DOCUMENT_NOT_FOUND`.
+
+## 18.3 Contradiction Analysis
+
+```http
+POST /api/prototype/run-contradiction-analysis
+```
+
+Runs deterministic fixed-format allergy contradiction detection for all synthetic patients.
+
+Success response:
+
+```json
+{
+  "analysis_run_id": "prototype-contradiction-20260701T120000Z",
+  "patients_analyzed": 3,
+  "events_created": 1,
+  "events_skipped_as_duplicates": 0,
+  "insufficient_data_count": 1,
+  "results": [
+    {
+      "patient_id": 1,
+      "patient_code": "P001",
+      "result": "EVENT_CREATED",
+      "event_id": 2,
+      "rule_id": "ALLERGY_CONTRADICTION",
+      "subject": "penicillin"
+    }
+  ]
+}
+```
+
+## 18.4 Event Detail Extension
+
+`GET /api/events/{event_id}` now includes a backward-compatible additional field:
+
+```json
+{
+  "document_evidence": [
+    {
+      "event_evidence_id": 1,
+      "target_type": "clinical_fact",
+      "target_id": 1,
+      "relation_type": "ASSERTED_FACT",
+      "clinical_fact": {
+        "id": 1,
+        "fact_type": "ALLERGY_STATEMENT",
+        "subject": "penicillin",
+        "polarity": "PRESENT",
+        "value": "Allergy: Penicillin",
+        "status": "ACTIVE",
+        "source_section": "Allergies",
+        "source_line": 4,
+        "source_start_char": 10,
+        "source_end_char": 20,
+        "observed_at": "2026-06-21T09:00:00Z",
+        "document": {
+          "id": 1,
+          "document_type": "ADMISSION_NOTE",
+          "title": "Synthetic admission note",
+          "source_document": "synthetic_admission_note_p001_20260621.txt",
+          "authored_at": "2026-06-21T09:00:00Z",
+          "is_synthetic": true
+        }
+      },
+      "clinical_document": null
+    }
+  ]
+}
+```
+
+Sprint 0 lab evidence remains in the existing `evidence` field.
+
+## 18.5 Evidence Graph
+
+```http
+GET /api/patients/{patient_id}/evidence-graph
+GET /api/events/{event_id}/evidence-graph
+```
+
+Response shape:
+
+```json
+{
+  "scope": "patient",
+  "nodes": [
+    {"id": "patient:1", "type": "patient", "label": "P001", "metadata": {"is_synthetic": true}}
+  ],
+  "edges": [
+    {"id": "patient:1->document:1:HAS_DOCUMENT", "source": "patient:1", "target": "document:1", "relation": "HAS_DOCUMENT", "metadata": {}}
+  ]
+}
+```
+
+Graph direction is source-to-derived-record, for example `document -> fact` and `fact -> event`.

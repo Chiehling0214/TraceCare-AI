@@ -47,6 +47,27 @@ export interface EventDetail extends ClinicalEvent {
       source_document: string;
     };
   }>;
+  document_evidence: Array<{
+    event_evidence_id: number;
+    target_type: string;
+    target_id: number;
+    relation_type: string;
+    clinical_fact: {
+      id: number;
+      fact_type: string;
+      subject: string;
+      polarity: string;
+      value: string;
+      status: string;
+      source_section: string;
+      source_line: number;
+      source_start_char: number;
+      source_end_char: number;
+      observed_at: string;
+      document: EvidenceDocument;
+    } | null;
+    clinical_document: EvidenceDocument | null;
+  }>;
 }
 
 export interface AnalysisRunResponse {
@@ -55,4 +76,31 @@ export interface AnalysisRunResponse {
   events_created: number;
   events_skipped_as_duplicates: number;
   insufficient_data_count: number;
+  results: Array<{
+    patient_id: number;
+    patient_code: string;
+    result: string;
+    event_id: number | null;
+    rule_id: string;
+  }>;
+}
+
+export interface ContradictionAnalysisRunResponse extends AnalysisRunResponse {
+  results: Array<{
+    patient_id: number;
+    patient_code: string;
+    result: string;
+    event_id: number | null;
+    rule_id: string;
+    subject: string | null;
+  }>;
+}
+
+interface EvidenceDocument {
+  id: number;
+  document_type: string;
+  title: string;
+  source_document: string;
+  authored_at: string;
+  is_synthetic: boolean;
 }

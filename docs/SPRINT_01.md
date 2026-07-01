@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Completed
 
 ## Background
 
@@ -375,6 +375,58 @@ Frontend checks:
 - Evidence graph API and UI show traceable source relationships.
 - Tests cover positive, negative, duplicate, and graph cases.
 - Documentation is updated to reflect actual implemented APIs and models.
+
+## Implemented
+
+- Added additive SQLAlchemy models: `ClinicalDocument`, `ClinicalFact`, and `EventEvidence`.
+- Added fixed-format synthetic document and allergy fact seed data for P001, P002, and P003.
+- Added deterministic `ALLERGY_CONTRADICTION` rule service.
+- Added duplicate-safe `CONTRADICTION` event creation using typed evidence.
+- Added document/fact APIs and patient/event evidence graph APIs.
+- Extended event detail with `document_evidence` while preserving Sprint 0 lab `evidence`.
+- Added frontend document, fact, and Cytoscape evidence graph panels to patient detail.
+- Updated overview analysis flow to run both Sprint 0 lab analysis and Sprint 1 contradiction analysis.
+- Added Sprint 1 backend tests for seed, APIs, contradiction detection, duplicate prevention, lifecycle, graph responses, and 404/422 behavior.
+
+## Acceptance Results
+
+- P001 has fixed-format synthetic documents with conflicting allergy facts: PASS.
+- Running contradiction analysis creates one `CONTRADICTION` event: PASS.
+- The event is traceable to both conflicting facts and their source documents: PASS.
+- P002 and P003 do not create false contradiction events: PASS.
+- Existing Sprint 0 lab analysis still works: PASS.
+- Existing acknowledge/resolve workflow works for contradiction events: PASS.
+- Evidence graph API returns useful nodes and edges: PASS.
+- Cytoscape graph is visible on patient detail: PASS by successful type/build validation; browser visual QA not captured in this document.
+- All new and existing backend tests pass: PASS.
+- No LLM, embeddings, vector database, arbitrary PDF parsing, or real patient data is introduced: PASS.
+
+## Test Results
+
+- Backend: `20 passed, 2 warnings`.
+- Frontend type check: passed.
+- Frontend production build: passed.
+- Local smoke on Sprint 1 server: patients `3`, lab events created `1`, contradiction events created `1`, P001 graph `9` nodes and `18` edges.
+- Warnings: FastAPI `on_event` deprecation warnings remain from Sprint 0 startup code.
+
+## Deviations
+
+- Alembic was not introduced. Sprint 1 uses the documented minimal prototype migration path: additive tables through SQLAlchemy `create_all`.
+- The evidence graph is derived by a service from persisted records rather than persisted as a separate graph table.
+- Cytoscape is dynamically imported inside the graph panel so it does not inflate the initial application chunk.
+
+## Technical Decisions
+
+- `EvidenceLink` remains lab-only for Sprint 0 backward compatibility.
+- `EventEvidence` stores typed targets using `target_type` and `target_id` for Sprint 1 document/fact evidence.
+- `ALLERGY_CONTRADICTION` compares only fixed-format structured facts with the same patient and subject.
+- Event graph edge direction is source-to-derived artifact: patient to document/lab/event, document to fact, fact/lab/document to event.
+
+## Known Issues
+
+- Existing SQLite databases may need restart/reset if created before Sprint 1 tables existed; no destructive migration is run automatically.
+- The frontend has no automated browser/e2e test suite yet.
+- FastAPI startup still uses deprecated `on_event`; this is pre-existing and not part of Sprint 1 scope.
 
 ## Next Sprint Dependency
 

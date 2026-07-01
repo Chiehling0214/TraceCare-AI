@@ -259,12 +259,14 @@ dt {
 .severity-REVIEW_REQUIRED,
 .status-OPEN,
 .status-ACKNOWLEDGED,
-.prototype {
+.prototype,
+.polarity-PRESENT {
   background: var(--amber-bg);
   color: var(--amber);
 }
 
-.severity-HIGH_RISK {
+.severity-HIGH_RISK,
+.polarity-NEGATED {
   background: var(--red-bg);
   color: var(--red);
 }
@@ -424,6 +426,110 @@ dd {
   font-family: "SFMono-Regular", Consolas, monospace;
 }
 
+.document-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.document-card {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.section-title.compact {
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.section-title.compact h3,
+.graph-detail h3 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.meta-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.meta-list dd {
+  overflow-wrap: anywhere;
+}
+
+.graph-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.graph-canvas {
+  height: 430px;
+  min-height: 430px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.graph-detail {
+  min-height: 430px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.legend-item::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.legend-patient::before {
+  background: #2563eb;
+}
+
+.legend-document::before {
+  background: #0f766e;
+}
+
+.legend-fact::before {
+  background: #a16207;
+}
+
+.legend-lab::before {
+  background: #7c3aed;
+}
+
+.legend-event::before {
+  background: #b91c1c;
+}
+
 .message {
   padding: 12px 14px;
   box-shadow: none;
@@ -465,8 +571,17 @@ dd {
   .summary-grid,
   .device-grid,
   .meta-grid,
-  .evidence-grid {
+  .evidence-grid,
+  .document-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .graph-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .graph-detail {
+    min-height: 0;
   }
 }
 
@@ -478,7 +593,8 @@ dd {
   .summary-grid,
   .device-grid,
   .meta-grid,
-  .evidence-grid {
+  .evidence-grid,
+  .document-grid {
     grid-template-columns: 1fr;
   }
 }

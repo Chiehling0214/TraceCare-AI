@@ -27,6 +27,7 @@ class ClinicalEvent(Base):
 
     patient = relationship("Patient", back_populates="clinical_events")
     evidence_links = relationship("EvidenceLink", back_populates="event", cascade="all, delete-orphan")
+    typed_evidence = relationship("EventEvidence", back_populates="event", cascade="all, delete-orphan")
 
 
 class EvidenceLink(Base):

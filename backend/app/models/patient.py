@@ -20,3 +20,5 @@ class Patient(Base):
 
     lab_results = relationship("LabResult", back_populates="patient", cascade="all, delete-orphan")
     clinical_events = relationship("ClinicalEvent", back_populates="patient", cascade="all, delete-orphan")
+    clinical_documents = relationship("ClinicalDocument", back_populates="patient", cascade="all, delete-orphan")
+    clinical_facts = relationship("ClinicalFact", back_populates="patient", cascade="all, delete-orphan")

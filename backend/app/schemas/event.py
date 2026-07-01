@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.patient import PatientBase
 
@@ -58,7 +58,41 @@ class EvidenceLinkOut(BaseModel):
     lab_result: EvidenceLabResult
 
 
+class EvidenceDocument(BaseModel):
+    id: int
+    document_type: str
+    title: str
+    source_document: str
+    authored_at: datetime
+    is_synthetic: bool
+
+
+class EvidenceFact(BaseModel):
+    id: int
+    fact_type: str
+    subject: str
+    polarity: str
+    value: str
+    status: str
+    source_section: str
+    source_line: int
+    source_start_char: int
+    source_end_char: int
+    observed_at: datetime
+    document: EvidenceDocument
+
+
+class TypedEvidenceOut(BaseModel):
+    event_evidence_id: int
+    target_type: str
+    target_id: int
+    relation_type: str
+    clinical_fact: EvidenceFact | None = None
+    clinical_document: EvidenceDocument | None = None
+
+
 class EventDetail(EventOut):
     patient: PatientBase
     analysis: EventAnalysis | None
     evidence: list[EvidenceLinkOut]
+    document_evidence: list[TypedEvidenceOut] = Field(default_factory=list)
