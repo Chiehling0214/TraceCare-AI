@@ -834,3 +834,38 @@ Action history is loaded from backend event detail and must not be hard-coded in
 ## 20.3 Safety
 
 Risk reason text must stay in prototype workflow language. The UI must not display diagnosis, treatment advice, real alert-policy language, or AI-generated risk claims.
+
+---
+
+# 21. Sprint 3 UI Addendum
+
+Sprint 3 adds an Evidence-first Summary panel to patient detail.
+
+## 21.1 Summary Controls
+
+The panel provides:
+
+- `病人摘要`
+- `交班摘要`
+
+Each button calls the backend summary API. The frontend must not hard-code summary text.
+
+## 21.2 Summary Display
+
+The panel displays:
+
+- summary status: `GENERATED`, `FALLBACK`, `ABSTAINED`, or `REJECTED`
+- validation status
+- adapter mode
+- local-only label
+- model name if a local model was used
+- sentence-level citation chips
+- abstention reason or validation errors
+
+## 21.3 Evidence Visibility
+
+Generated or fallback text must not hide the original evidence. Existing labs, documents, facts, clinical events, and evidence graph remain visible on the same patient detail page.
+
+## 21.4 Safety
+
+The UI must label fallback/local-only behavior clearly and must not present summaries as diagnosis, treatment advice, or model-calculated risk.

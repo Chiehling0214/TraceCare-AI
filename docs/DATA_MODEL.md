@@ -129,3 +129,26 @@ Sprint 2 keeps Sprint 0 and Sprint 1 data intact. It adds lifecycle metadata to 
 | target_id | integer | yes | Target record ID |
 | relation_type | string | yes | `ASSERTED_FACT`, `DENIED_FACT`, `SUPPORTS`, or `SOURCE_DOCUMENT` |
 | created_at | datetime | yes | Creation timestamp |
+
+## Sprint 3 Additive Data Model
+
+Sprint 3 keeps Sprint 0 through Sprint 2 tables intact and adds optional summary persistence.
+
+## SummaryRecord
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| id | string | yes | UUID summary identifier |
+| patient_id | integer | yes | Patient foreign key |
+| summary_kind | string | yes | `patient` or `handoff` |
+| status | string | yes | `GENERATED`, `FALLBACK`, `ABSTAINED`, or `REJECTED` |
+| validation_status | string | yes | `PASSED`, `FAILED`, or `ABSTAINED` |
+| adapter_mode | string | yes | `disabled`, `deterministic-fallback`, `fake-test`, or local backend name |
+| model_name | string | no | Local model name when used |
+| local_only | string | yes | Stored as `true` for Sprint 3 |
+| text | text | yes | Validated summary text, empty for abstention/rejection |
+| sentences_json | text | yes | Sentence-level text and evidence ID mapping |
+| evidence_package_json | text | yes | Evidence package snapshot used for validation |
+| validation_errors_json | text | yes | Validation error codes |
+| abstention_reason | text | no | Reason for abstention or rejection |
+| created_at | datetime | yes | Summary creation timestamp |

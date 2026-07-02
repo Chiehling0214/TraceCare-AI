@@ -6,6 +6,10 @@ services:
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/tracecare.db}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
       SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      LLM_MODE: ${LLM_MODE:-disabled}
+      LOCAL_LLM_BASE_URL: ${LOCAL_LLM_BASE_URL:-http://host.docker.internal:11434}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-}
+      LOCAL_LLM_TIMEOUT_SECONDS: ${LOCAL_LLM_TIMEOUT_SECONDS:-120}
     ports:
       - "${BACKEND_HOST_PORT:-8001}:8000"
     volumes:

@@ -597,6 +597,63 @@ dd {
   color: #991b1b;
 }
 
+.summary-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.summary-output {
+  display: grid;
+  gap: 14px;
+}
+
+.summary-FALLBACK,
+.summary-GENERATED,
+.validation-PASSED {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.summary-ABSTAINED,
+.summary-REJECTED,
+.validation-FAILED,
+.validation-ABSTAINED {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.summary-sentences {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.summary-sentences p {
+  margin: 0 0 8px;
+  line-height: 1.6;
+}
+
+.citation-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.citation-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
 .state-box {
   padding: 18px;
   border: 1px solid var(--border);

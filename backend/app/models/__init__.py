@@ -5,6 +5,7 @@ from app.models.event_evidence import EventEvidence
 from app.models.event_action import EventAction
 from app.models.lab_result import LabResult
 from app.models.patient import Patient
+from app.models.summary_record import SummaryRecord
 
 __all__ = [
     "ClinicalDocument",
@@ -15,4 +16,5 @@ __all__ = [
     "EvidenceLink",
     "LabResult",
     "Patient",
+    "SummaryRecord",
 ]

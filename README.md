@@ -1,6 +1,6 @@
 # TraceCare AI
 
-TraceCare AI is a local competition prototype for traceable clinical evidence and event lifecycle demonstration. Sprint 0 uses synthetic patients and deterministic creatinine trend rules to create review-required events. Sprint 1 adds fixed-format synthetic clinical documents, deterministic allergy contradiction detection, and an evidence graph. Sprint 2 adds deterministic risk fusion, event defer, timeout evaluation, and action history.
+TraceCare AI is a local competition prototype for traceable clinical evidence and event lifecycle demonstration. Sprint 0 uses synthetic patients and deterministic creatinine trend rules to create review-required events. Sprint 1 adds fixed-format synthetic clinical documents, deterministic allergy contradiction detection, and an evidence graph. Sprint 2 adds deterministic risk fusion, event defer, timeout evaluation, and action history. Sprint 3 adds evidence-first local summary APIs with deterministic fallback, citation validation, and numeric consistency checks.
 
 This project is a competition prototype and is not a medical device.
 It must not be used for diagnosis or treatment decisions.
@@ -36,6 +36,10 @@ Docker Compose reads the root `.env` file. To change ports, edit:
 BACKEND_HOST_PORT=8001
 FRONTEND_HOST_PORT=5173
 VITE_API_BASE_URL=http://localhost:8001/api
+LLM_MODE=disabled
+LOCAL_LLM_BASE_URL=http://localhost:11434
+LOCAL_LLM_MODEL=
+LOCAL_LLM_TIMEOUT_SECONDS=120
 ```
 
 Backend:
@@ -76,7 +80,27 @@ Run analysis:
 Invoke-RestMethod -Method Post http://127.0.0.1:8001/api/prototype/run-analysis
 Invoke-RestMethod -Method Post http://127.0.0.1:8001/api/prototype/run-contradiction-analysis
 Invoke-RestMethod -Method Post http://127.0.0.1:8001/api/prototype/run-risk-evaluation
+Invoke-RestMethod -Method Post http://127.0.0.1:8001/api/patients/1/summaries/patient
 ```
+
+## Local Summary Mode
+
+Sprint 3 defaults to deterministic fallback mode:
+
+```text
+LLM_MODE=disabled
+```
+
+Optional local-only Ollama mode can be configured with:
+
+```text
+LLM_MODE=ollama
+LOCAL_LLM_BASE_URL=http://localhost:11434
+LOCAL_LLM_MODEL=<local-model-name>
+LOCAL_LLM_TIMEOUT_SECONDS=120
+```
+
+External generative AI APIs are not used. If no local runtime is available, the app still returns validated deterministic fallback summaries or abstains when evidence is insufficient.
 
 ## Frontend
 
@@ -105,10 +129,12 @@ pytest
 7. Review `0.8 -> 1.3 mg/dL`, `RAPID_INCREASE`, and lab source documents.
 8. Review synthetic clinical documents, structured allergy facts, `ALLERGY_CONTRADICTION`, and source positions.
 9. Inspect the Evidence Graph section for patient, document, fact, lab, and event relationships.
-10. Confirm simulated device state follows unified risk priority.
-11. Click `延後追蹤`; the event becomes `DEFERRED`, remains visible, and records a `DEFER` action.
-12. Click `確認事件`; buzzer changes to off through `ACKNOWLEDGED` and records an `ACKNOWLEDGE` action.
-13. Click `標示為已處理`; event becomes `RESOLVED`, records a `RESOLVE` action, and device state returns to `NORMAL` after all unresolved events are resolved.
+10. In the Evidence-first Summary panel, click `病人摘要` or `交班摘要`.
+11. Confirm each returned sentence shows citation chips such as `lab:1`, `fact:1`, `event:1`, or `risk:1`.
+12. Confirm simulated device state follows unified risk priority.
+13. Click `延後追蹤`; the event becomes `DEFERRED`, remains visible, and records a `DEFER` action.
+14. Click `確認事件`; buzzer changes to off through `ACKNOWLEDGED` and records an `ACKNOWLEDGE` action.
+15. Click `標示為已處理`; event becomes `RESOLVED`, records a `RESOLVE` action, and device state returns to `NORMAL` after all unresolved events are resolved.
 
 ## Notes
 
@@ -116,5 +142,7 @@ pytest
 - Resolving an `OPEN` event is allowed by the backend and sets `acknowledged_at` first, but the UI guides the preferred acknowledge-then-resolve demo flow.
 - Deferring an event keeps it unresolved and visible. A missing `defer_until` defaults to four hours after the action time.
 - Risk evaluation is deterministic. It never calls an LLM and does not produce diagnosis or treatment recommendations.
+- Sprint 3 summaries do not calculate risk or update events. Risk context comes from Sprint 2 deterministic services.
+- Every returned summary sentence must cite evidence IDs. Validation rejects missing citations and numeric mismatches.
 - No external AI, medical, or hardware APIs are called.
 - Sprint 1 and Sprint 2 schema changes are additive. The prototype still uses SQLAlchemy `create_all`; Sprint 2 also includes a small additive SQLite migration helper for new nullable event lifecycle columns.

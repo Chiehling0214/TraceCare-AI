@@ -12,6 +12,7 @@ from app.schemas.graph import EvidenceGraphResponse
 from app.schemas.lab import LabListResponse
 from app.schemas.patient import PatientDetail, PatientListResponse
 from app.schemas.risk import PatientRiskResponse, RiskEvaluationRequest, RiskEvaluationResponse
+from app.schemas.summary import SummaryEvidenceResponse, SummaryRequest, SummaryResponse
 from app.services import document_service
 from app.services import patient_service
 from app.services.contradiction_service import run_contradiction_analysis
@@ -22,6 +23,7 @@ from app.services.graph_service import build_event_graph, build_patient_graph
 from app.services.lifecycle_service import acknowledge_event, actions_for_event, defer_event, resolve_event
 from app.services.risk_service import patient_risk, run_risk_evaluation
 from app.services.rule_service import run_analysis
+from app.services.summary_service import generate_summary, get_summary, get_summary_evidence
 
 router = APIRouter(prefix="/api")
 
@@ -60,6 +62,32 @@ def list_patient_events(patient_id: int, db: Session = Depends(get_db)) -> dict[
 @router.get("/patients/{patient_id}/risk", response_model=PatientRiskResponse, tags=["risk"])
 def get_patient_risk(patient_id: int, db: Session = Depends(get_db)) -> dict[str, object]:
     return patient_risk(db, patient_id).as_dict()
+
+
+@router.post(
+    "/patients/{patient_id}/summaries/patient",
+    response_model=SummaryResponse,
+    tags=["summaries"],
+)
+def post_patient_summary(
+    patient_id: int,
+    payload: SummaryRequest | None = None,
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    return generate_summary(db, patient_id, "patient", prefer_llm=payload.prefer_llm if payload else True)
+
+
+@router.post(
+    "/patients/{patient_id}/summaries/handoff",
+    response_model=SummaryResponse,
+    tags=["summaries"],
+)
+def post_handoff_summary(
+    patient_id: int,
+    payload: SummaryRequest | None = None,
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    return generate_summary(db, patient_id, "handoff", prefer_llm=payload.prefer_llm if payload else True)
 
 
 @router.get("/patients/{patient_id}/documents", response_model=ClinicalDocumentListResponse, tags=["documents"])
@@ -113,6 +141,16 @@ def post_resolve(event_id: int, db: Session = Depends(get_db)) -> object:
 def get_event_actions(event_id: int, db: Session = Depends(get_db)) -> dict[str, object]:
     items = actions_for_event(db, event_id)
     return {"event_id": event_id, "items": items, "total": len(items)}
+
+
+@router.get("/summaries/{summary_id}", response_model=SummaryResponse, tags=["summaries"])
+def get_summary_record(summary_id: str, db: Session = Depends(get_db)) -> dict[str, object]:
+    return get_summary(db, summary_id)
+
+
+@router.get("/summaries/{summary_id}/evidence", response_model=SummaryEvidenceResponse, tags=["summaries"])
+def get_summary_record_evidence(summary_id: str, db: Session = Depends(get_db)) -> dict[str, object]:
+    return get_summary_evidence(db, summary_id)
 
 
 @router.post("/prototype/run-analysis", response_model=AnalysisRunResponse, tags=["analysis"])

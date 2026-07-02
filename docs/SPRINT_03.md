@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Completed
 
 ## Background
 
@@ -164,6 +164,106 @@ Responses must include:
 - Evidence package builder is tested.
 - Summary endpoint returns validated cited output or abstention.
 - Frontend displays citations and validation state.
+
+## Implemented
+
+- Added Evidence Package builder over existing synthetic patients, labs, documents, facts, events, and deterministic Sprint 2 risk output.
+- Added local LLM adapter boundary with:
+  - `disabled` mode,
+  - deterministic fallback path,
+  - fake/test adapter for automated validation tests,
+  - optional Ollama local adapter interface.
+- Added post-generation validators for:
+  - missing sentence citations,
+  - unknown evidence IDs,
+  - numeric mismatch against cited evidence,
+  - diagnosis/treatment language.
+- Added summary persistence through additive `summary_records`.
+- Added APIs:
+  - `POST /api/patients/{patient_id}/summaries/patient`
+  - `POST /api/patients/{patient_id}/summaries/handoff`
+  - `GET /api/summaries/{summary_id}`
+  - `GET /api/summaries/{summary_id}/evidence`
+- Added frontend Evidence-first Summary panel on patient detail.
+- Added Sprint 3 backend tests for evidence package shape, deterministic fallback, summary retrieval, abstention, generated-output validation fallback, and validator coverage for missing citations, unknown citations, numeric mismatches, uncited evidence mentions, and unsupported contradiction claims.
+
+## Evidence Package Design
+
+Evidence IDs use stable typed prefixes:
+
+- `patient:{id}`
+- `lab:{id}`
+- `document:{id}`
+- `fact:{id}`
+- `event:{id}`
+- `action:{id}`
+- `risk:{patient_id}`
+
+Each evidence item includes:
+
+- ID
+- type
+- label
+- text
+- numeric values
+- metadata
+
+The package is snapshotted into `summary_records.evidence_package_json` so later retrieval can show exactly what was validated.
+
+## LLM Adapter and Configuration
+
+Environment variables:
+
+```text
+LLM_MODE=disabled
+LOCAL_LLM_BASE_URL=http://localhost:11434
+LOCAL_LLM_MODEL=
+LOCAL_LLM_TIMEOUT_SECONDS=120
+```
+
+Supported implementation modes:
+
+- `disabled`: no model call; deterministic fallback is used.
+- `fake-test`: automated tests only; not a real model integration.
+- `ollama`: optional local-only adapter boundary using an Ollama-compatible local runtime.
+
+No external generative AI API is used.
+
+## Acceptance Results
+
+- Summary output is local-only or deterministic fallback: PASS for deterministic fallback and verified local Ollama generation.
+- Every summary sentence maps to evidence IDs: PASS.
+- Numeric values in summary match evidence package values: PASS.
+- System abstains when evidence is insufficient: PASS.
+- No risk level is calculated by the LLM: PASS by architecture; risk evidence comes from Sprint 2 deterministic service.
+- Real local model inference: PASS with local Ollama `llama3.2:3b` through Docker backend using `LOCAL_LLM_BASE_URL=http://host.docker.internal:11434`.
+
+## Test Results
+
+- Baseline backend test output before Sprint 3: `26 passed`.
+- Sprint 3 backend test output: `9 passed`.
+- Docker API smoke test produced `GENERATED` / `PASSED` patient and handoff summaries with local Ollama `llama3.2:3b`.
+- Frontend type check: passed.
+- Frontend production build: passed after the known sandbox `esbuild spawn EPERM` workaround.
+
+## Deviations
+
+- Summary persistence was implemented even though persistence was optional, because `GET /api/summaries/{summary_id}` and `GET /api/summaries/{summary_id}/evidence` require retrievable records.
+- The first Sprint 3 implementation does not add a vector database. Existing structured evidence is sufficient for deterministic evidence package construction.
+- The generated text is intentionally conservative. Sprint 3 prioritizes evidence traceability, local-only execution, validator safety, and deterministic fallback over rich clinical-style summarization.
+
+## Technical Decisions
+
+- LLM output is accepted only after validators pass. Invalid generated output is not returned to the UI; the service switches to deterministic fallback when fallback validation passes.
+- Deterministic fallback avoids derived numeric aggregation so the numeric validator does not approve model-like calculations that are not explicitly present in cited evidence.
+- P003 abstains because it lacks the minimum longitudinal synthetic evidence threshold: at least two labs and at least two synthetic documents.
+- Summary services do not update clinical event status, risk state, or action history.
+
+## Known Issues
+
+- The optional Ollama adapter expects the local model to return strict JSON; model-specific prompt tuning may be needed later.
+- Summary content is evidence-inventory oriented and intentionally sparse. A later sprint can improve readability by adding richer deterministic evidence facts without allowing the LLM to calculate risk, infer clinical meaning, or recommend treatment.
+- The project still uses SQLAlchemy `create_all` plus additive prototype helpers rather than a formal migration framework.
 
 ## Next Sprint Dependency
 

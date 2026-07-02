@@ -14,6 +14,7 @@ import { LabResultsTable } from "../components/LabResultsTable";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
 import { PrototypeNotice } from "../components/PrototypeNotice";
 import { RiskBadge } from "../components/StatusBadges";
+import { SummaryPanel } from "../components/SummaryPanel";
 import { formatDateTime } from "../format";
 import { Link } from "../router";
 import type { DeviceState } from "../types/device";
@@ -114,6 +115,9 @@ export function PatientDetailPage({ patientId }: { patientId: number }) {
         <DeviceStateCard device={device} />
       </div>
       {message && <div className="message success">{message}</div>}
+      <section className="panel">
+        <SummaryPanel patientId={patientId} />
+      </section>
       <section className="panel">
         <div className="section-title">
           <h2>Creatinine 歷史</h2>

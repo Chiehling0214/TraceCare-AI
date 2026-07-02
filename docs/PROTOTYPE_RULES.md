@@ -134,3 +134,28 @@ Auto-escalation records exactly one `AUTO_ESCALATE` action per event.
 ### Safety
 
 Risk messages must describe prototype workflow conditions only, such as unresolved events, multiple event types, or timeout. They must not say the patient has a disease, needs a treatment, or requires a real clinical escalation.
+
+## Sprint 3 Evidence-first Summary Rules
+
+Sprint 3 summaries are generated from an Evidence Package. They are not clinical recommendations and do not calculate risk.
+
+### Evidence Package Inputs
+
+- Synthetic patient identity
+- Structured lab results
+- Synthetic clinical documents
+- Structured clinical facts
+- Prototype clinical events
+- Deterministic Sprint 2 risk output
+
+### Summary Validation Rules
+
+- Every returned sentence must include at least one evidence ID.
+- Every evidence ID must exist in the Evidence Package.
+- Numeric values in a sentence must also appear in the cited evidence text.
+- Diagnosis and treatment language is rejected.
+- If evidence is insufficient, the system abstains instead of summarizing.
+
+### Abstention Rule
+
+Sprint 3 requires at least two lab results and at least two synthetic documents for patient/handoff summaries. P003 intentionally fails this requirement and returns `INSUFFICIENT_LONGITUDINAL_SYNTHETIC_EVIDENCE`.

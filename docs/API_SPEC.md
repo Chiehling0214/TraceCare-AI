@@ -1189,3 +1189,88 @@ Success response:
 ```
 
 Risk evaluation is deterministic. It escalates open events only when the documented timeout rule is met and records `AUTO_ESCALATE` once per event.
+
+---
+
+# 20. Sprint 3 API Addendum
+
+Sprint 3 adds evidence-first local summary APIs. Existing Sprint 0 through Sprint 2 fields and endpoints remain unchanged.
+
+## 20.1 Create Patient Summary
+
+```http
+POST /api/patients/{patient_id}/summaries/patient
+POST /api/patients/{patient_id}/summaries/handoff
+```
+
+Optional request body:
+
+```json
+{
+  "prefer_llm": true
+}
+```
+
+When `LLM_MODE=disabled`, the backend returns a deterministic fallback summary. If evidence is insufficient, it abstains.
+
+Success response:
+
+```json
+{
+  "id": "summary-uuid",
+  "patient_id": 1,
+  "patient_code": "P001",
+  "summary_kind": "patient",
+  "status": "FALLBACK",
+  "validation_status": "PASSED",
+  "adapter_mode": "deterministic-fallback",
+  "model_name": null,
+  "local_only": true,
+  "text": "Validated summary text.",
+  "sentences": [
+    {
+      "index": 0,
+      "text": "P001 is a synthetic TraceCare AI patient in this prototype.",
+      "evidence_ids": ["patient:1"]
+    }
+  ],
+  "evidence_package": {
+    "package_id": "patient:1:patient",
+    "patient_id": 1,
+    "patient_code": "P001",
+    "summary_kind": "patient",
+    "evidence_items": [],
+    "sufficient": true,
+    "insufficiency_reason": null
+  },
+  "validation_errors": [],
+  "abstention_reason": null,
+  "created_at": "2026-07-02T00:00:00Z"
+}
+```
+
+Possible `status` values:
+
+```text
+GENERATED
+FALLBACK
+ABSTAINED
+REJECTED
+```
+
+## 20.2 Retrieve Summary
+
+```http
+GET /api/summaries/{summary_id}
+GET /api/summaries/{summary_id}/evidence
+```
+
+Unknown summary IDs return `SUMMARY_NOT_FOUND`.
+
+## 20.3 Validation Requirements
+
+- Each sentence must cite evidence IDs.
+- Unknown citations are rejected.
+- Numeric values must match cited evidence.
+- Diagnosis or treatment language is rejected.
+- LLM output must not calculate risk; risk context comes from `GET /api/patients/{patient_id}/risk` and the Evidence Package.
