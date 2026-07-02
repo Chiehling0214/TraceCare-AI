@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.patient import PatientBase
+from app.schemas.action import EventActionOut
 
 
 class EventOut(BaseModel):
@@ -16,6 +17,10 @@ class EventOut(BaseModel):
     created_at: datetime
     acknowledged_at: datetime | None
     resolved_at: datetime | None
+    deferred_at: datetime | None = None
+    deferred_until: datetime | None = None
+    escalated_at: datetime | None = None
+    escalation_reason: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,6 +36,10 @@ class EventActionResponse(BaseModel):
     status: str
     acknowledged_at: datetime | None
     resolved_at: datetime | None
+    deferred_at: datetime | None = None
+    deferred_until: datetime | None = None
+    escalated_at: datetime | None = None
+    escalation_reason: str | None = None
 
 
 class EventAnalysis(BaseModel):
@@ -96,3 +105,4 @@ class EventDetail(EventOut):
     analysis: EventAnalysis | None
     evidence: list[EvidenceLinkOut]
     document_evidence: list[TypedEvidenceOut] = Field(default_factory=list)
+    action_history: list[EventActionOut] = Field(default_factory=list)

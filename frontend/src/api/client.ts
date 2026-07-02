@@ -4,8 +4,11 @@ export async function apiGet<T>(path: string): Promise<T> {
   return request<T>(path, { method: "GET" });
 }
 
-export async function apiPost<T>(path: string): Promise<T> {
-  return request<T>(path, { method: "POST" });
+export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>(path, {
+    method: "POST",
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
 }
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {

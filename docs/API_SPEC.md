@@ -104,6 +104,7 @@ Sprint 0 analysis creates `REVIEW_REQUIRED` events only.
 ```text
 OPEN
 ACKNOWLEDGED
+DEFERRED
 RESOLVED
 ```
 
@@ -1057,3 +1058,134 @@ Response shape:
 ```
 
 Graph direction is source-to-derived-record, for example `document -> fact` and `fact -> event`.
+
+---
+
+# 19. Sprint 2 API Addendum
+
+Sprint 2 extends Sprint 0 and Sprint 1 without removing or renaming existing fields.
+
+## 19.1 Event Lifecycle Fields
+
+Event list, event detail, and lifecycle action responses may include:
+
+```json
+{
+  "deferred_at": null,
+  "deferred_until": null,
+  "escalated_at": null,
+  "escalation_reason": null
+}
+```
+
+`DEFERRED` is an unresolved event status. Existing `OPEN`, `ACKNOWLEDGED`, and `RESOLVED` statuses remain valid.
+
+## 19.2 Defer Event
+
+```http
+POST /api/events/{event_id}/defer
+```
+
+Optional request body:
+
+```json
+{
+  "reason": "Prototype reviewer deferred follow-up",
+  "defer_until": "2026-06-21T13:00:00Z",
+  "actor_label": "prototype-reviewer"
+}
+```
+
+Success response has the same lifecycle event shape as acknowledge and resolve. Deferred events remain unresolved and visible.
+
+## 19.3 Event Actions
+
+```http
+GET /api/events/{event_id}/actions
+```
+
+Success response:
+
+```json
+{
+  "event_id": 1,
+  "items": [
+    {
+      "id": 1,
+      "event_id": 1,
+      "patient_id": 1,
+      "action_type": "DEFER",
+      "actor_label": "prototype-reviewer",
+      "note": "Prototype reviewer deferred follow-up",
+      "created_at": "2026-06-21T09:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+`GET /api/events/{event_id}` also includes a backward-compatible additive `action_history` array.
+
+## 19.4 Patient Risk
+
+```http
+GET /api/patients/{patient_id}/risk
+```
+
+Success response:
+
+```json
+{
+  "patient_id": 1,
+  "patient_code": "P001",
+  "risk_state": "HIGH_RISK",
+  "risk_reasons": [
+    {
+      "code": "MULTIPLE_EVENT_TYPES",
+      "message": "Multiple unresolved prototype event types are present for the same synthetic patient.",
+      "event_ids": [1, 2]
+    }
+  ],
+  "unresolved_event_count": 2,
+  "oldest_unresolved_event_at": "2026-06-21T08:00:01Z",
+  "driver_event_ids": [1, 2]
+}
+```
+
+`GET /api/patients` includes additive summary fields:
+
+```json
+{
+  "risk_reasons": ["MULTIPLE_EVENT_TYPES"],
+  "oldest_unresolved_event_at": "2026-06-21T08:00:01Z",
+  "driver_event_ids": [1, 2]
+}
+```
+
+## 19.5 Run Risk Evaluation
+
+```http
+POST /api/prototype/run-risk-evaluation
+```
+
+Optional request body:
+
+```json
+{
+  "evaluated_at": "2026-06-21T11:00:00Z"
+}
+```
+
+Success response:
+
+```json
+{
+  "evaluation_run_id": "prototype-risk-20260621T110000Z",
+  "evaluated_at": "2026-06-21T11:00:00Z",
+  "patients_evaluated": 3,
+  "events_escalated": 1,
+  "results": []
+}
+```
+
+Risk evaluation is deterministic. It escalates open events only when the documented timeout rule is met and records `AUTO_ESCALATE` once per event.

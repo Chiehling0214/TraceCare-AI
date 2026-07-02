@@ -1,6 +1,6 @@
 from collections.abc import Generator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import get_settings
@@ -31,3 +31,23 @@ def get_db() -> Generator[Session, None, None]:
 
 def create_all() -> None:
     Base.metadata.create_all(bind=engine)
+    run_additive_migrations()
+
+
+def run_additive_migrations() -> None:
+    if not settings.database_url.startswith("sqlite"):
+        return
+    inspector = inspect(engine)
+    if "clinical_events" not in inspector.get_table_names():
+        return
+    existing_columns = {column["name"] for column in inspector.get_columns("clinical_events")}
+    additions = {
+        "deferred_at": "DATETIME",
+        "deferred_until": "DATETIME",
+        "escalated_at": "DATETIME",
+        "escalation_reason": "VARCHAR(255)",
+    }
+    with engine.begin() as connection:
+        for column_name, column_type in additions.items():
+            if column_name not in existing_columns:
+                connection.execute(text(f"ALTER TABLE clinical_events ADD COLUMN {column_name} {column_type}"))

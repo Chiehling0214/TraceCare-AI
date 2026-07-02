@@ -8,6 +8,9 @@ export interface PatientSummary {
   current_severity: Severity;
   open_event_count: number;
   latest_lab_observed_at: string | null;
+  risk_reasons: string[];
+  oldest_unresolved_event_at: string | null;
+  driver_event_ids: number[];
 }
 
 export interface PatientDetail extends PatientSummary {

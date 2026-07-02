@@ -24,10 +24,15 @@ class ClinicalEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deferred_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    deferred_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    escalated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    escalation_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     patient = relationship("Patient", back_populates="clinical_events")
     evidence_links = relationship("EvidenceLink", back_populates="event", cascade="all, delete-orphan")
     typed_evidence = relationship("EventEvidence", back_populates="event", cascade="all, delete-orphan")
+    actions = relationship("EventAction", back_populates="event", cascade="all, delete-orphan")
 
 
 class EvidenceLink(Base):

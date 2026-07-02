@@ -98,6 +98,7 @@ Recommended characteristics:
 | REVIEW_REQUIRED | Amber / Yellow | 待確認 |
 | HIGH_RISK | Red | 高風險 |
 | ACKNOWLEDGED | Amber / Orange | 已確認未結案 |
+| DEFERRED | Amber / Orange | 已延後 |
 | RESOLVED | Gray / Green | 已處理／結案 |
 
 Color alone must not be the only indicator.
@@ -435,6 +436,7 @@ This prevents the rule from being mistaken for a validated clinical standard.
 |---|---|
 | OPEN | 待處理 |
 | ACKNOWLEDGED | 已確認未結案 |
+| DEFERRED | 已延後 |
 | RESOLVED | 已處理／結案 |
 
 ---
@@ -783,3 +785,52 @@ Sprint 0 intentionally does not include:
 - real hardware integration
 
 These limitations should be documented rather than hidden.
+
+---
+
+# 20. Sprint 2 UI Addendum
+
+Sprint 2 extends the existing UI without removing Sprint 0 or Sprint 1 workflows.
+
+## 20.1 Patient Overview
+
+The `執行原型分析` button runs:
+
+```text
+POST /api/prototype/run-analysis
+POST /api/prototype/run-contradiction-analysis
+POST /api/prototype/run-risk-evaluation
+```
+
+The patient table displays additive risk context:
+
+- risk reason codes
+- unresolved event count
+- oldest unresolved event time
+- latest lab time
+
+Patients are ordered by deterministic risk priority, unresolved event age, unresolved event count, then latest lab time.
+
+## 20.2 Event Cards
+
+Event cards show Sprint 2 lifecycle metadata:
+
+- deferred-until time
+- escalation time
+- escalation reason
+- action history
+
+Allowed buttons:
+
+| Event Status | Confirm | Defer | Resolve |
+|---|---|---|---|
+| OPEN | enabled | enabled | hidden |
+| DEFERRED | enabled | enabled | enabled |
+| ACKNOWLEDGED | hidden | enabled | enabled |
+| RESOLVED | hidden | hidden | hidden |
+
+Action history is loaded from backend event detail and must not be hard-coded in React.
+
+## 20.3 Safety
+
+Risk reason text must stay in prototype workflow language. The UI must not display diagnosis, treatment advice, real alert-policy language, or AI-generated risk claims.

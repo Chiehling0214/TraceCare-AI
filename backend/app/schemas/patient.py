@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PatientBase(BaseModel):
@@ -16,6 +16,9 @@ class PatientSummary(PatientBase):
     current_severity: str
     open_event_count: int
     latest_lab_observed_at: datetime | None
+    risk_reasons: list[str] = Field(default_factory=list)
+    oldest_unresolved_event_at: datetime | None = None
+    driver_event_ids: list[int] = Field(default_factory=list)
 
 
 class PatientDetail(PatientSummary):

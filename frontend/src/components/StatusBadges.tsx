@@ -7,6 +7,7 @@ const severityLabels: Record<string, string> = {
 const statusLabels: Record<string, string> = {
   OPEN: "待處理",
   ACKNOWLEDGED: "已確認未結案",
+  DEFERRED: "已延後",
   RESOLVED: "已處理／結案"
 };
 

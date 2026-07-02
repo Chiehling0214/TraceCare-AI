@@ -1,4 +1,4 @@
-export type EventStatus = "OPEN" | "ACKNOWLEDGED" | "RESOLVED";
+export type EventStatus = "OPEN" | "ACKNOWLEDGED" | "DEFERRED" | "RESOLVED";
 
 export interface ClinicalEvent {
   id: number;
@@ -10,7 +10,21 @@ export interface ClinicalEvent {
   rule_id: string;
   created_at: string;
   acknowledged_at: string | null;
+  deferred_at: string | null;
+  deferred_until: string | null;
+  escalated_at: string | null;
+  escalation_reason: string | null;
   resolved_at: string | null;
+}
+
+export interface EventAction {
+  id: number;
+  event_id: number;
+  patient_id: number;
+  action_type: "ACKNOWLEDGE" | "DEFER" | "RESOLVE" | "AUTO_ESCALATE" | string;
+  actor_label: string;
+  note: string | null;
+  created_at: string;
 }
 
 export interface EventListResponse {
@@ -68,6 +82,19 @@ export interface EventDetail extends ClinicalEvent {
     } | null;
     clinical_document: EvidenceDocument | null;
   }>;
+  action_history: EventAction[];
+}
+
+export interface DeferEventRequest {
+  reason?: string;
+  defer_until?: string | null;
+  actor_label?: string;
+}
+
+export interface EventActionsResponse {
+  event_id: number;
+  items: EventAction[];
+  total: number;
 }
 
 export interface AnalysisRunResponse {
@@ -93,6 +120,26 @@ export interface ContradictionAnalysisRunResponse extends AnalysisRunResponse {
     event_id: number | null;
     rule_id: string;
     subject: string | null;
+  }>;
+}
+
+export interface RiskEvaluationResponse {
+  evaluation_run_id: string;
+  patients_evaluated: number;
+  events_escalated: number;
+  evaluated_at: string;
+  results: Array<{
+    patient_id: number;
+    patient_code: string;
+    risk_state: "NORMAL" | "REVIEW_REQUIRED" | "HIGH_RISK";
+    unresolved_event_count: number;
+    oldest_unresolved_event_at: string | null;
+    risk_reasons: Array<{
+      code: string;
+      message: string;
+      event_ids: number[];
+    }>;
+    driver_event_ids: number[];
   }>;
 }
 

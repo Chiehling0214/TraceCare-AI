@@ -96,3 +96,41 @@ The output must use the wording:
 "Prototype rule triggered. Human review is required."
 
 It must not state that the patient has an allergy diagnosis, a confirmed chart error, or a treatment requirement.
+
+## Sprint 2 Risk Fusion
+
+Sprint 2 risk states are deterministic prototype review states. They are not diagnosis, prognosis, or treatment recommendations.
+
+### Input
+
+Unresolved clinical events for a synthetic patient.
+
+Unresolved statuses:
+
+- OPEN
+- ACKNOWLEDGED
+- DEFERRED
+
+### Output
+
+- risk_state: NORMAL, REVIEW_REQUIRED, or HIGH_RISK
+- risk_reasons: rule reason codes plus related event IDs
+- oldest_unresolved_event_at
+- unresolved_event_count
+- driver_event_ids
+
+### Risk State Rules
+
+- `NORMAL`: no unresolved events.
+- `REVIEW_REQUIRED`: one or more unresolved events exist and no high-risk driver is present.
+- `HIGH_RISK`: any unresolved event is `HIGH_RISK`, any `OPEN` event is at least 2 hours old, or multiple unresolved event types exist for the same patient.
+
+### Timeout Rule
+
+`POST /api/prototype/run-risk-evaluation` escalates an `OPEN` event to `HIGH_RISK` when its age is at least 2 hours at the supplied or current evaluation time.
+
+Auto-escalation records exactly one `AUTO_ESCALATE` action per event.
+
+### Safety
+
+Risk messages must describe prototype workflow conditions only, such as unresolved events, multiple event types, or timeout. They must not say the patient has a disease, needs a treatment, or requires a real clinical escalation.

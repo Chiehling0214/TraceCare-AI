@@ -39,6 +39,10 @@
 | rule_id | string |
 | created_at | datetime |
 | acknowledged_at | datetime, nullable |
+| deferred_at | datetime, nullable |
+| deferred_until | datetime, nullable |
+| escalated_at | datetime, nullable |
+| escalation_reason | string, nullable |
 | resolved_at | datetime, nullable |
 
 ## EvidenceLink
@@ -66,6 +70,35 @@ Sprint 1 keeps the Sprint 0 tables intact and adds new tables through SQLAlchemy
 | authored_at | datetime | yes | Document authored time |
 | created_at | datetime | yes | Creation timestamp |
 | is_synthetic | boolean | yes | Always true for included seed data |
+
+## Sprint 2 Additive Data Model
+
+Sprint 2 keeps Sprint 0 and Sprint 1 data intact. It adds lifecycle metadata to `ClinicalEvent` and a persisted action/audit table.
+
+## EventAction
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| id | integer | yes | Internal primary key |
+| event_id | integer | yes | ClinicalEvent foreign key |
+| patient_id | integer | yes | Patient foreign key |
+| action_type | string | yes | `ACKNOWLEDGE`, `DEFER`, `RESOLVE`, or `AUTO_ESCALATE` |
+| actor_label | string | yes | Synthetic actor label such as `prototype-reviewer` or `prototype-system` |
+| note | text | no | Synthetic reason or audit note |
+| created_at | datetime | yes | Action timestamp |
+
+## Sprint 2 Event Statuses
+
+`ClinicalEvent.status` supports:
+
+| Status | Meaning |
+|---|---|
+| OPEN | Newly created unresolved event |
+| ACKNOWLEDGED | Reviewed but not resolved |
+| DEFERRED | Deferred and still unresolved |
+| RESOLVED | Closed event |
+
+`OPEN`, `ACKNOWLEDGED`, and `RESOLVED` remain backward-compatible with Sprint 0 and Sprint 1.
 
 ## ClinicalFact
 

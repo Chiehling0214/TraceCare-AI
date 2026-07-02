@@ -16,6 +16,7 @@ def get_event_or_404(db: Session, event_id: int) -> ClinicalEvent:
             selectinload(ClinicalEvent.patient).selectinload(Patient.clinical_facts).selectinload(ClinicalFact.document),
             selectinload(ClinicalEvent.evidence_links).selectinload(EvidenceLink.lab_result),
             selectinload(ClinicalEvent.typed_evidence),
+            selectinload(ClinicalEvent.actions),
         )
         .where(ClinicalEvent.id == event_id)
     ).scalar_one_or_none()
@@ -104,9 +105,14 @@ def build_event_detail(event: ClinicalEvent) -> dict[str, object]:
         "created_at": event.created_at,
         "acknowledged_at": event.acknowledged_at,
         "resolved_at": event.resolved_at,
+        "deferred_at": event.deferred_at,
+        "deferred_until": event.deferred_until,
+        "escalated_at": event.escalated_at,
+        "escalation_reason": event.escalation_reason,
         "analysis": analysis,
         "evidence": evidence,
         "document_evidence": document_evidence,
+        "action_history": sorted(event.actions, key=lambda item: (item.created_at, item.id)),
     }
 
 

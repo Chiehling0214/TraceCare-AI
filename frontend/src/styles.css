@@ -259,6 +259,7 @@ dt {
 .severity-REVIEW_REQUIRED,
 .status-OPEN,
 .status-ACKNOWLEDGED,
+.status-DEFERRED,
 .prototype,
 .polarity-PRESENT {
   background: var(--amber-bg);
@@ -279,7 +280,7 @@ dt {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
+  min-width: 940px;
 }
 
 th,
@@ -392,6 +393,54 @@ dd {
   background: #f8fafc;
   border: 1px solid var(--border);
   font-weight: 700;
+}
+
+.reason-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reason-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.action-history {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.action-history ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.action-history li {
+  line-height: 1.5;
+}
+
+.action-history li span {
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.action-history li p {
+  margin: 4px 0 0;
+  color: #334155;
 }
 
 .evidence-grid {

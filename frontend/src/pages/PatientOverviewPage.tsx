@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { runContradictionAnalysis, runPrototypeAnalysis } from "../api/analysis";
+import { runContradictionAnalysis, runPrototypeAnalysis, runRiskEvaluation } from "../api/analysis";
 import { fetchDeviceState } from "../api/device";
 import { fetchPatients } from "../api/patients";
 import { DeviceStateCard } from "../components/DeviceStateCard";
@@ -46,10 +46,12 @@ export function PatientOverviewPage() {
     try {
       const result = await runPrototypeAnalysis();
       const contradictionResult = await runContradictionAnalysis();
+      const riskResult = await runRiskEvaluation();
       await load();
       setMessage(
         `原型分析已完成。檢驗新增 ${result.events_created} 筆、矛盾新增 ${contradictionResult.events_created} 筆；` +
-          `略過重複 ${result.events_skipped_as_duplicates + contradictionResult.events_skipped_as_duplicates} 筆。`
+          `略過重複 ${result.events_skipped_as_duplicates + contradictionResult.events_skipped_as_duplicates} 筆；` +
+          `風險評估 ${riskResult.patients_evaluated} 人、逾時升級 ${riskResult.events_escalated} 筆。`
       );
     } catch {
       setError("分析執行失敗，請檢查後端服務。");
@@ -77,7 +79,7 @@ export function PatientOverviewPage() {
       <section className="summary-grid">
         <StatCard label="合成病人" value={stats.total.toString()} />
         <StatCard label="待確認病人" value={stats.review.toString()} />
-        <StatCard label="未處理事件" value={stats.openEvents.toString()} />
+        <StatCard label="未結案事件" value={stats.openEvents.toString()} />
         <StatCard label="設備狀態" value={device?.state ?? "LOADING"} />
       </section>
       <DeviceStateCard device={device} />

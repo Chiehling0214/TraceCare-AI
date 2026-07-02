@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Completed
 
 ## Background
 
@@ -62,11 +62,9 @@ Create a unified deterministic risk service and richer event lifecycle that supp
 - Update device state service to consume unified risk/lifecycle output rather than duplicating event priority logic.
 - Keep Sprint 0 endpoints backward-compatible.
 
-## Proposed Data Model Changes
+## Implemented Data Model Changes
 
-TBD after Sprint 1 implementation for final event/evidence identifiers.
-
-Likely additive structures:
+Sprint 2 uses additive schema changes only.
 
 - Action/audit record:
   - event id
@@ -80,9 +78,18 @@ Likely additive structures:
   - defer-until time
   - escalation reason or computed risk reason
 
-Avoid destructive changes to Sprint 0 tables unless a migration is explicitly documented.
+Implementation:
 
-## Proposed API Changes
+- Added `event_actions`.
+- Added nullable `clinical_events.deferred_at`.
+- Added nullable `clinical_events.deferred_until`.
+- Added nullable `clinical_events.escalated_at`.
+- Added nullable `clinical_events.escalation_reason`.
+- Existing `OPEN`, `ACKNOWLEDGED`, and `RESOLVED` statuses remain valid.
+- Added `DEFERRED` for unresolved lifecycle state.
+- SQLite demo initialization uses SQLAlchemy `create_all` plus an additive startup migration helper for the new nullable event columns.
+
+## Implemented API Changes
 
 Add:
 
@@ -97,7 +104,7 @@ Extend:
 - `GET /api/events/{event_id}` with lifecycle action history if practical.
 - `GET /api/device-state` to reflect unified risk priority.
 
-## Proposed UI Changes
+## Implemented UI Changes
 
 - Patient overview shows risk reason summary.
 - Patient overview sorting includes risk priority, oldest unresolved event, and unresolved event count.
@@ -172,6 +179,59 @@ Extend:
 - Event lifecycle actions are persisted.
 - UI shows action history and supports defer.
 - Existing Sprint 0 and Sprint 1 flows still work.
+
+## Implementation Summary
+
+- Added deterministic risk service for unresolved `RAPID_LAB_CHANGE` and `CONTRADICTION` events.
+- Added lifecycle service for acknowledge, defer, resolve, and timeout auto-escalation.
+- Added persisted action history for `ACKNOWLEDGE`, `DEFER`, `RESOLVE`, and `AUTO_ESCALATE`.
+- Updated patient summaries and ordering to use risk state, oldest unresolved event age, and unresolved event count.
+- Updated simulated device state to derive priority from the unified risk/lifecycle service.
+- Updated frontend to run lab analysis, contradiction analysis, and risk evaluation from the demo action.
+- Updated frontend event cards to show lifecycle timestamps, escalation reason, action history, and defer controls.
+
+## Deterministic Risk Rules
+
+- `NORMAL`: no unresolved events.
+- `REVIEW_REQUIRED`: unresolved prototype event exists but no high-risk driver is present.
+- `HIGH_RISK`: any unresolved event is already `HIGH_RISK`, an `OPEN` event is at least 2 hours old, or multiple unresolved event types are present for the same synthetic patient.
+- Unresolved statuses are `OPEN`, `ACKNOWLEDGED`, and `DEFERRED`.
+- Deferred and acknowledged events remain visible until resolved.
+
+## Acceptance Criteria Results
+
+- Patient risk is deterministic and explainable: Passed.
+- Multiple event types can influence patient ranking: Passed.
+- Defer, acknowledge, and resolve are testable end to end: Passed.
+- Action history is visible through API and UI: Passed.
+- No LLM or clinical diagnosis language is introduced: Passed.
+
+## Test Results
+
+- Backend test suite: `26 passed`.
+- Sprint 0 and Sprint 1 regression coverage remains in the same backend suite.
+- Sprint 2 backend tests cover schema additions, risk fusion, defer, action history, timeout escalation, and invalid lifecycle paths.
+- Frontend type check: passed.
+- Frontend production build: passed.
+
+## Deviations
+
+- `GET /api/events/{event_id}` includes action history directly in `action_history`; `GET /api/events/{event_id}/actions` is also available for explicit audit retrieval.
+- `POST /api/events/{event_id}/defer` accepts an optional reason and optional `defer_until`. If `defer_until` is omitted, the backend uses a deterministic default of four hours from the action time.
+- Timeout auto-escalation is explicit through `POST /api/prototype/run-risk-evaluation`; ordinary reads calculate risk but do not mutate event severity.
+
+## Technical Decisions
+
+- Business logic lives in `risk_service` and `lifecycle_service`; API routes only orchestrate request/response handling.
+- Time-dependent tests pass fixed `evaluated_at` values to avoid reliance on uncontrolled system time.
+- Action history is intentionally stored with synthetic actor labels instead of a user table because formal authentication and authorization are out of scope.
+- SQLite additive migration is limited to Sprint 2 nullable event columns because the prototype still uses SQLAlchemy `create_all` rather than Alembic.
+
+## Known Issues
+
+- The project still uses prototype SQLite initialization, not a production migration framework.
+- No role-based permissions exist for lifecycle actions.
+- Risk states are deterministic prototype review states only and are not clinical risk scores.
 
 ## Next Sprint Dependency
 

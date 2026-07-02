@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.schemas.action import DeferEventRequest, EventActionsResponse
 from app.schemas.analysis import AnalysisRunResponse, ContradictionAnalysisRunResponse
 from app.schemas.device import DeviceStateResponse
 from app.schemas.document import ClinicalDocumentListResponse, ClinicalDocumentOut
@@ -10,13 +11,16 @@ from app.schemas.fact import ClinicalFactListResponse
 from app.schemas.graph import EvidenceGraphResponse
 from app.schemas.lab import LabListResponse
 from app.schemas.patient import PatientDetail, PatientListResponse
+from app.schemas.risk import PatientRiskResponse, RiskEvaluationRequest, RiskEvaluationResponse
 from app.services import document_service
 from app.services import patient_service
 from app.services.contradiction_service import run_contradiction_analysis
 from app.services.device_service import device_adapter
 from app.services.errors import api_error
-from app.services.event_service import acknowledge_event, build_event_detail, get_event_or_404, resolve_event
+from app.services.event_service import build_event_detail, get_event_or_404
 from app.services.graph_service import build_event_graph, build_patient_graph
+from app.services.lifecycle_service import acknowledge_event, actions_for_event, defer_event, resolve_event
+from app.services.risk_service import patient_risk, run_risk_evaluation
 from app.services.rule_service import run_analysis
 
 router = APIRouter(prefix="/api")
@@ -53,6 +57,11 @@ def list_patient_events(patient_id: int, db: Session = Depends(get_db)) -> dict[
     return {"patient_id": patient_id, "items": items, "total": len(items)}
 
 
+@router.get("/patients/{patient_id}/risk", response_model=PatientRiskResponse, tags=["risk"])
+def get_patient_risk(patient_id: int, db: Session = Depends(get_db)) -> dict[str, object]:
+    return patient_risk(db, patient_id).as_dict()
+
+
 @router.get("/patients/{patient_id}/documents", response_model=ClinicalDocumentListResponse, tags=["documents"])
 def list_patient_documents(patient_id: int, db: Session = Depends(get_db)) -> dict[str, object]:
     if patient_service.get_patient(db, patient_id) is None:
@@ -84,9 +93,26 @@ def post_acknowledge(event_id: int, db: Session = Depends(get_db)) -> object:
     return acknowledge_event(db, event_id)
 
 
+@router.post("/events/{event_id}/defer", response_model=EventActionResponse, tags=["events"])
+def post_defer(event_id: int, payload: DeferEventRequest, db: Session = Depends(get_db)) -> object:
+    return defer_event(
+        db,
+        event_id,
+        reason=payload.reason,
+        actor_label=payload.actor_label,
+        defer_until=payload.defer_until,
+    )
+
+
 @router.post("/events/{event_id}/resolve", response_model=EventActionResponse, tags=["events"])
 def post_resolve(event_id: int, db: Session = Depends(get_db)) -> object:
     return resolve_event(db, event_id)
+
+
+@router.get("/events/{event_id}/actions", response_model=EventActionsResponse, tags=["events"])
+def get_event_actions(event_id: int, db: Session = Depends(get_db)) -> dict[str, object]:
+    items = actions_for_event(db, event_id)
+    return {"event_id": event_id, "items": items, "total": len(items)}
 
 
 @router.post("/prototype/run-analysis", response_model=AnalysisRunResponse, tags=["analysis"])
@@ -101,6 +127,18 @@ def post_run_analysis(db: Session = Depends(get_db)) -> dict[str, object]:
 )
 def post_run_contradiction_analysis(db: Session = Depends(get_db)) -> dict[str, object]:
     return run_contradiction_analysis(db)
+
+
+@router.post(
+    "/prototype/run-risk-evaluation",
+    response_model=RiskEvaluationResponse,
+    tags=["analysis", "risk"],
+)
+def post_run_risk_evaluation(
+    payload: RiskEvaluationRequest | None = None,
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    return run_risk_evaluation(db, evaluated_at=payload.evaluated_at if payload else None)
 
 
 @router.get("/patients/{patient_id}/evidence-graph", response_model=EvidenceGraphResponse, tags=["graph"])
