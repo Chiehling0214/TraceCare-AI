@@ -1,6 +1,6 @@
 # TraceCare AI
 
-TraceCare AI is a local competition prototype for traceable clinical evidence and event lifecycle demonstration. Sprint 0 uses synthetic patients and deterministic creatinine trend rules to create review-required events. Sprint 1 adds fixed-format synthetic clinical documents, deterministic allergy contradiction detection, and an evidence graph. Sprint 2 adds deterministic risk fusion, event defer, timeout evaluation, and action history. Sprint 3 adds evidence-first local summary APIs with deterministic fallback, citation validation, and numeric consistency checks.
+TraceCare AI is a local competition prototype for traceable clinical evidence and event lifecycle demonstration. Sprint 0 uses synthetic patients and deterministic creatinine trend rules to create review-required events. Sprint 1 adds fixed-format synthetic clinical documents, deterministic allergy contradiction detection, and an evidence graph. Sprint 2 adds deterministic risk fusion, event defer, timeout evaluation, and action history. Sprint 3 adds evidence-first local summary APIs with deterministic fallback, citation validation, and numeric consistency checks. Sprint 4 adds optional ESP32 USB Serial alerting while preserving simulated device mode.
 
 This project is a competition prototype and is not a medical device.
 It must not be used for diagnosis or treatment decisions.
@@ -40,6 +40,11 @@ LLM_MODE=disabled
 LOCAL_LLM_BASE_URL=http://localhost:11434
 LOCAL_LLM_MODEL=
 LOCAL_LLM_TIMEOUT_SECONDS=120
+DEVICE_ADAPTER_MODE=simulated
+DEVICE_SERIAL_PORT=
+DEVICE_SERIAL_BAUD_RATE=115200
+DEVICE_SERIAL_TIMEOUT_SECONDS=1.0
+DEVICE_HEARTBEAT_TIMEOUT_SECONDS=3.0
 ```
 
 Backend:
@@ -102,6 +107,26 @@ LOCAL_LLM_TIMEOUT_SECONDS=120
 
 External generative AI APIs are not used. If no local runtime is available, the app still returns validated deterministic fallback summaries or abstains when evidence is insufficient.
 
+## Device Adapter Mode
+
+Sprint 4 defaults to simulated device mode:
+
+```text
+DEVICE_ADAPTER_MODE=simulated
+```
+
+Optional ESP32 USB Serial mode:
+
+```text
+DEVICE_ADAPTER_MODE=usb_serial
+DEVICE_SERIAL_PORT=COM3
+DEVICE_SERIAL_BAUD_RATE=115200
+DEVICE_SERIAL_TIMEOUT_SECONDS=1.0
+DEVICE_HEARTBEAT_TIMEOUT_SECONDS=3.0
+```
+
+Do not hard-code a COM port in source code. Hardware failure or missing serial configuration does not block the dashboard; the backend returns `fallback_active=true` and the UI shows laptop fallback status. The command protocol is documented in `docs/DEVICE_PROTOCOL.md`, and the ESP32 sketch is tracked at `firmware/esp32_tracecare_alert/esp32_tracecare_alert.ino`.
+
 ## Frontend
 
 ```powershell
@@ -131,7 +156,7 @@ pytest
 9. Inspect the Evidence Graph section for patient, document, fact, lab, and event relationships.
 10. In the Evidence-first Summary panel, click `病人摘要` or `交班摘要`.
 11. Confirm each returned sentence shows citation chips such as `lab:1`, `fact:1`, `event:1`, or `risk:1`.
-12. Confirm simulated device state follows unified risk priority.
+12. Confirm device state follows unified risk priority in simulated mode, or shows USB Serial health and laptop fallback when hardware is offline.
 13. Click `延後追蹤`; the event becomes `DEFERRED`, remains visible, and records a `DEFER` action.
 14. Click `確認事件`; buzzer changes to off through `ACKNOWLEDGED` and records an `ACKNOWLEDGE` action.
 15. Click `標示為已處理`; event becomes `RESOLVED`, records a `RESOLVE` action, and device state returns to `NORMAL` after all unresolved events are resolved.
@@ -144,5 +169,6 @@ pytest
 - Risk evaluation is deterministic. It never calls an LLM and does not produce diagnosis or treatment recommendations.
 - Sprint 3 summaries do not calculate risk or update events. Risk context comes from Sprint 2 deterministic services.
 - Every returned summary sentence must cite evidence IDs. Validation rejects missing citations and numeric mismatches.
-- No external AI, medical, or hardware APIs are called.
+- Sprint 4 physical alerting is optional and local-only. It is a non-medical demo alert device and must not control any medical or treatment equipment.
+- No external AI, medical, or hospital APIs are called.
 - Sprint 1 and Sprint 2 schema changes are additive. The prototype still uses SQLAlchemy `create_all`; Sprint 2 also includes a small additive SQLite migration helper for new nullable event lifecycle columns.

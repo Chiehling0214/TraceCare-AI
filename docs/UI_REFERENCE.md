@@ -554,7 +554,7 @@ Do not leave clickable buttons after an event is resolved.
 
 ---
 
-## 11. Simulated Device State
+## 11. Device State
 
 ### 11.1 Required Fields
 
@@ -564,6 +564,12 @@ Display:
 - LED output
 - buzzer output
 - connection mode
+- adapter mode
+- connection status
+- hardware availability
+- fallback state
+- last heartbeat time
+- sanitized last error, when present
 
 ### 11.2 State Mapping
 
@@ -576,15 +582,19 @@ Display:
 
 ### 11.3 Visual Treatment
 
-The simulated device should look like a status panel, not like a real hardware control screen.
+The device state should look like a status panel, not like a real hardware control screen.
 
 It must display:
 
 ```text
-Connection: SIMULATED
+Connection: SIMULATED or USB_SERIAL_*
 ```
 
-Do not add fake connection controls.
+The reconnect control must call `POST /api/device/reconnect`; it must not fake hardware state in frontend code.
+
+When `fallback_active=true`, show a visible inline message that the hardware is offline and laptop fallback remains active.
+
+Frontend must use backend-returned `led`, `buzzer`, `connection_status`, and `fallback_active`. It must not independently infer physical LED or buzzer state.
 
 ---
 

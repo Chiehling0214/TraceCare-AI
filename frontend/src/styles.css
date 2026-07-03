@@ -590,6 +590,12 @@ dd {
   color: #166534;
 }
 
+.message.warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
 .message.error,
 .state-box.error {
   border-color: #fecaca;

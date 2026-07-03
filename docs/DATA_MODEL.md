@@ -152,3 +152,20 @@ Sprint 3 keeps Sprint 0 through Sprint 2 tables intact and adds optional summary
 | validation_errors_json | text | yes | Validation error codes |
 | abstention_reason | text | no | Reason for abstention or rejection |
 | created_at | datetime | yes | Summary creation timestamp |
+
+## Sprint 4 Device State
+
+Sprint 4 does not add a persistence table. Device state and health are transient backend adapter outputs derived from existing clinical event lifecycle/risk state and optional USB Serial adapter status.
+
+Returned transient fields include:
+
+| Field | Type | Notes |
+|---|---|---|
+| adapter_mode | string | `simulated` or `usb_serial` |
+| connection_status | string | `CONNECTED`, `RECONNECTING`, `OFFLINE`, or adapter-specific status |
+| hardware_available | boolean | True only when physical adapter heartbeat or command succeeds |
+| fallback_active | boolean | True when dashboard/laptop fallback is active |
+| last_heartbeat_at | datetime, nullable | Last successful heartbeat |
+| last_command | string, nullable | Last sanitized protocol command |
+| last_error | string, nullable | Sanitized device error code |
+| protocol_version | string | `tracecare-device-v1` |

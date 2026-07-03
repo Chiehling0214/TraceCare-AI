@@ -112,7 +112,7 @@ export function PatientDetailPage({ patientId }: { patientId: number }) {
             </div>
           </dl>
         </section>
-        <DeviceStateCard device={device} />
+        <DeviceStateCard device={device} onReconnect={load} />
       </div>
       {message && <div className="message success">{message}</div>}
       <section className="panel">

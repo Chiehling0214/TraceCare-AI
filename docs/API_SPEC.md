@@ -713,7 +713,7 @@ Example:
 
 # 11. Device State API
 
-## 11.1 Get Simulated Device State
+## 11.1 Get Device State
 
 ### Request
 
@@ -728,11 +728,19 @@ Status: `200 OK`
 ```json
 {
   "connection": "SIMULATED",
+  "adapter_mode": "simulated",
+  "connection_status": "CONNECTED",
+  "hardware_available": false,
+  "fallback_active": false,
   "state": "WARNING",
   "led": "YELLOW_BLINKING",
   "buzzer": "SHORT_BEEP",
   "derived_from_event_ids": [1],
-  "updated_at": "2026-06-21T08:00:01Z"
+  "updated_at": "2026-06-21T08:00:01Z",
+  "last_heartbeat_at": null,
+  "last_command": null,
+  "last_error": null,
+  "protocol_version": "tracecare-device-v1"
 }
 ```
 
@@ -741,11 +749,19 @@ Status: `200 OK`
 ```json
 {
   "connection": "SIMULATED",
+  "adapter_mode": "simulated",
+  "connection_status": "CONNECTED",
+  "hardware_available": false,
+  "fallback_active": false,
   "state": "ACKNOWLEDGED",
   "led": "YELLOW_SOLID",
   "buzzer": "OFF",
   "derived_from_event_ids": [1],
-  "updated_at": "2026-06-21T09:00:00Z"
+  "updated_at": "2026-06-21T09:00:00Z",
+  "last_heartbeat_at": null,
+  "last_command": null,
+  "last_error": null,
+  "protocol_version": "tracecare-device-v1"
 }
 ```
 
@@ -754,17 +770,76 @@ Status: `200 OK`
 ```json
 {
   "connection": "SIMULATED",
+  "adapter_mode": "simulated",
+  "connection_status": "CONNECTED",
+  "hardware_available": false,
+  "fallback_active": false,
   "state": "NORMAL",
   "led": "GREEN_SOLID",
   "buzzer": "OFF",
   "derived_from_event_ids": [],
-  "updated_at": "2026-06-21T09:10:00Z"
+  "updated_at": "2026-06-21T09:10:00Z",
+  "last_heartbeat_at": null,
+  "last_command": null,
+  "last_error": null,
+  "protocol_version": "tracecare-device-v1"
 }
 ```
 
+### Success Response — USB Serial Offline Fallback
+
+```json
+{
+  "connection": "USB_SERIAL_OFFLINE",
+  "adapter_mode": "usb_serial",
+  "connection_status": "OFFLINE",
+  "hardware_available": false,
+  "fallback_active": true,
+  "state": "WARNING",
+  "led": "YELLOW_BLINKING",
+  "buzzer": "SHORT_BEEP",
+  "derived_from_event_ids": [1],
+  "updated_at": "2026-06-21T08:00:01Z",
+  "last_heartbeat_at": null,
+  "last_command": "PING seq=1 protocol=tracecare-device-v1",
+  "last_error": "DEVICE_TIMEOUT",
+  "protocol_version": "tracecare-device-v1"
+}
+```
+
+`fallback_active=true` means the hardware adapter is unavailable, but dashboard state and laptop visual/audio fallback remain available.
+
+## 11.2 Device Health
+
+```http
+GET /api/device/health
+```
+
+```json
+{
+  "connection": "SIMULATED",
+  "adapter_mode": "simulated",
+  "connection_status": "CONNECTED",
+  "hardware_available": false,
+  "fallback_active": false,
+  "last_heartbeat_at": null,
+  "last_command": null,
+  "last_error": null,
+  "protocol_version": "tracecare-device-v1"
+}
+```
+
+## 11.3 Reconnect Device
+
+```http
+POST /api/device/reconnect
+```
+
+The response shape is the same as `GET /api/device/health`. Reconnect is safe to repeat.
+
 ---
 
-## 11.2 Device State Priority
+## 11.4 Device State Priority
 
 When multiple events exist, use the highest active priority:
 

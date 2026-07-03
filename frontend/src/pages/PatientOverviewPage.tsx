@@ -82,7 +82,7 @@ export function PatientOverviewPage() {
         <StatCard label="未結案事件" value={stats.openEvents.toString()} />
         <StatCard label="設備狀態" value={device?.state ?? "LOADING"} />
       </section>
-      <DeviceStateCard device={device} />
+      <DeviceStateCard device={device} onReconnect={load} />
       <section className="panel">
         <div className="section-title">
           <h2>合成病人清單</h2>

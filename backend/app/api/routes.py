@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.action import DeferEventRequest, EventActionsResponse
 from app.schemas.analysis import AnalysisRunResponse, ContradictionAnalysisRunResponse
-from app.schemas.device import DeviceStateResponse
+from app.schemas.device import DeviceHealthResponse, DeviceStateResponse
 from app.schemas.document import ClinicalDocumentListResponse, ClinicalDocumentOut
 from app.schemas.event import EventActionResponse, EventDetail, EventListResponse
 from app.schemas.fact import ClinicalFactListResponse
@@ -16,7 +16,7 @@ from app.schemas.summary import SummaryEvidenceResponse, SummaryRequest, Summary
 from app.services import document_service
 from app.services import patient_service
 from app.services.contradiction_service import run_contradiction_analysis
-from app.services.device_service import device_adapter
+from app.services.device_service import get_device_health, get_device_state as build_device_state, reconnect_device
 from app.services.errors import api_error
 from app.services.event_service import build_event_detail, get_event_or_404
 from app.services.graph_service import build_event_graph, build_patient_graph
@@ -191,4 +191,14 @@ def get_event_evidence_graph(event_id: int, db: Session = Depends(get_db)) -> di
 
 @router.get("/device-state", response_model=DeviceStateResponse, tags=["device"])
 def get_device_state(db: Session = Depends(get_db)) -> dict[str, object]:
-    return device_adapter.current_state(db)
+    return build_device_state(db)
+
+
+@router.get("/device/health", response_model=DeviceHealthResponse, tags=["device"])
+def get_device_health_endpoint() -> dict[str, object]:
+    return get_device_health()
+
+
+@router.post("/device/reconnect", response_model=DeviceHealthResponse, tags=["device"])
+def post_device_reconnect() -> dict[str, object]:
+    return reconnect_device()

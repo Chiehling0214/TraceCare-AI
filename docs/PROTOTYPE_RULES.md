@@ -159,3 +159,31 @@ Sprint 3 summaries are generated from an Evidence Package. They are not clinical
 ### Abstention Rule
 
 Sprint 3 requires at least two lab results and at least two synthetic documents for patient/handoff summaries. P003 intentionally fails this requirement and returns `INSUFFICIENT_LONGITUDINAL_SYNTHETIC_EVIDENCE`.
+
+## Sprint 4 Device Alert Rules
+
+Sprint 4 device output is a prototype alert display only. It must not control or be connected to any medical or treatment device.
+
+### Adapter Rules
+
+- `simulated` mode remains the default and must work without hardware.
+- `usb_serial` mode may send commands only through the device adapter layer.
+- API routes must not contain serial port logic.
+- Missing serial dependency, missing port, timeout, or protocol error must return offline health with `fallback_active=true`.
+- Frontend must display backend-returned device health and must not infer LED or buzzer state locally.
+
+### Command Rules
+
+- `PING` checks heartbeat.
+- `SET` commands are idempotent and safe to repeat.
+- Commands include `seq` and `protocol=tracecare-device-v1`.
+- Frontend receives sanitized error codes only, such as `SERIAL_PORT_NOT_CONFIGURED`, `DEVICE_TIMEOUT`, or `DEVICE_PROTOCOL_ERROR`.
+
+### State Mapping
+
+| Backend state | LED | Buzzer |
+| --- | --- | --- |
+| `NORMAL` | `GREEN_SOLID` | `OFF` |
+| `WARNING` | `YELLOW_BLINKING` | `SHORT_BEEP` |
+| `ACKNOWLEDGED` | `YELLOW_SOLID` | `OFF` |
+| `CRITICAL` | `RED_BLINKING` | `INTERMITTENT` |
