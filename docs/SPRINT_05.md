@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Completed
 
 ## Background
 
@@ -158,6 +158,126 @@ Development endpoints must be clearly marked as prototype/demo-only.
 - Demo reset/seed/run is documented.
 - Synthetic warnings are visible.
 - Existing demo flows still work.
+
+## Implemented
+
+- Added fixed-schema lab CSV import:
+  - `POST /api/import/labs/preview`
+  - `POST /api/import/labs/commit`
+- Added fixed-schema clinical document JSON import:
+  - `POST /api/import/documents/preview`
+  - `POST /api/import/documents/commit`
+- Added import error retrieval:
+  - `GET /api/imports/{import_id}/errors`
+- Added prototype/demo management endpoints:
+  - `POST /api/development/reset-demo`
+  - `POST /api/development/seed-demo`
+  - `POST /api/development/run-demo-analysis`
+- Added `ImportBatch` metadata table for committed/failed import audit.
+- Added bundled synthetic demo fixtures:
+  - `backend/app/seed/demo_labs.csv`
+  - `backend/app/seed/demo_documents.json`
+- Added Demo Data frontend page at `/demo-data`.
+- Added `DEMO_MANAGEMENT_ENABLED` environment setting.
+
+## Data Import and Validation Design
+
+Lab CSV schema version: `tracecare-labs-csv-v1`.
+
+Required fields:
+
+- `patient_code`
+- `display_name`
+- `test_name`
+- `value`
+- `unit`
+- `reference_min`
+- `reference_max`
+- `observed_at`
+- `source_document`
+
+Clinical document JSON schema version: `tracecare-documents-json-v1`.
+
+Document JSON accepts only fixed-format `documents[]` with structured `facts[]`. It does not parse arbitrary PDF, Word, free text, FHIR, or real medical record formats.
+
+Validation covers:
+
+- missing required fields,
+- invalid numeric values,
+- invalid ISO-8601 datetimes,
+- invalid units,
+- unsupported file extensions,
+- empty files,
+- duplicate rows inside one import file,
+- unsupported fact types,
+- invalid source positions,
+- non-synthetic patient codes.
+
+## Deduplication, Transaction, and Source Tracking
+
+- Preview does not write patient, lab, document, fact, or event data.
+- Commit revalidates before writing.
+- Invalid commits create a failed `ImportBatch` but do not create imported patient/lab/document/fact records.
+- Existing database duplicates are skipped with explicit duplicate counts.
+- Duplicate rows inside one submitted file are invalid.
+- Source metadata is preserved through:
+  - `LabResult.source_document`,
+  - `ClinicalDocument.source_document`,
+  - `ClinicalFact.source_section`,
+  - `ClinicalFact.source_line`,
+  - `ClinicalFact.source_start_char`,
+  - `ClinicalFact.source_end_char`.
+
+## API and Frontend Changes
+
+- Added import/demo API routes under existing `/api` router.
+- Added frontend `DemoDataPage`.
+- Added import client functions and TypeScript types.
+- Added header navigation link to `/demo-data`.
+- Existing Sprint 0 through Sprint 4 pages and APIs remain unchanged.
+
+## Acceptance Results
+
+- Fixed-schema imports work for synthetic data only: PASS.
+- Invalid imports do not partially corrupt data: PASS.
+- Source filenames and positions are preserved: PASS.
+- Demo reset/seed/run flow is repeatable: PASS.
+- Upload/import UI warns against real patient data: PASS.
+- Duplicate import does not create duplicate patients/labs/documents/facts/events: PASS.
+- Unsupported formats and empty files return structured errors: PASS.
+
+## Test Results
+
+- Baseline backend regression before Sprint 5 displayed all tests through `[100%]`.
+- Sprint 5 backend tests displayed `11 passed`.
+- Full backend regression after Sprint 5 displayed all tests through `[100%]` with 53 test dots.
+- Frontend build passed using the known sandbox `esbuild spawn EPERM` workaround.
+- Docker Compose build/start passed.
+- Docker API smoke verified reset, seed, run-demo-analysis, lab preview, lab commit, and duplicate import skip.
+
+## Deviations
+
+- Import error details are stored as JSON on `ImportBatch` rather than in a separate row-per-error table. This is sufficient for prototype retrieval through `GET /api/imports/{import_id}/errors`.
+- Demo fixture files are stored under `backend/app/seed/` to keep them available inside the backend Docker image.
+- Demo management endpoints are enabled by default for local prototype use, but can be disabled through `DEMO_MANAGEMENT_ENABLED=false`.
+
+## Technical Decisions
+
+- Existing `Patient`, `LabResult`, `ClinicalDocument`, and `ClinicalFact` tables remain the source of truth for imported data.
+- CSV/JSON content is passed as JSON request body text, not multipart upload, to keep the Sprint 5 prototype deterministic and easy to test.
+- Commit endpoints return `committed=false` for validation failures instead of an HTTP error so the UI can show structured validation reports consistently.
+- Reset deletes local synthetic/demo data explicitly and does not require manual database file deletion.
+
+## Migration Notes
+
+- `import_batches` is additive.
+- Existing SQLite initialization uses `create_all`.
+- Existing SQLite databases get `import_batches` through the additive migration helper.
+
+## Known Issues
+
+- Backend pytest commands still display successful completion but do not always exit cleanly in the current Windows shell, matching prior Sprint 3 and Sprint 4 behavior.
+- The import UI uses text inputs for content rather than browser file picker uploads; it still calls real backend APIs and persists data.
 
 ## Next Sprint Dependency
 

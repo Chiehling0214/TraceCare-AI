@@ -13,6 +13,9 @@ export function AppHeader() {
         <Link href="/" className="nav-link">
           病人總覽
         </Link>
+        <Link href="/demo-data" className="nav-link">
+          Demo Data
+        </Link>
       </nav>
     </header>
   );

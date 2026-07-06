@@ -1278,6 +1278,118 @@ POST /api/patients/{patient_id}/summaries/patient
 POST /api/patients/{patient_id}/summaries/handoff
 ```
 
+# 21. Sprint 5 Import and Demo Management API
+
+Sprint 5 endpoints are prototype/demo-only and can be disabled with:
+
+```text
+DEMO_MANAGEMENT_ENABLED=false
+```
+
+All import payloads must be synthetic fixed-schema data.
+
+## 21.1 Preview Lab CSV
+
+```http
+POST /api/import/labs/preview
+```
+
+Request:
+
+```json
+{
+  "source_filename": "demo_labs.csv",
+  "content": "patient_code,display_name,test_name,value,unit,reference_min,reference_max,observed_at,source_document\nP020,Synthetic Demo,creatinine,0.8,mg/dL,0.6,1.2,2026-06-24T08:00:00Z,demo.csv\n"
+}
+```
+
+Response:
+
+```json
+{
+  "import_kind": "labs",
+  "schema_version": "tracecare-labs-csv-v1",
+  "source_filename": "demo_labs.csv",
+  "valid": true,
+  "rows_received": 1,
+  "rows_valid": 1,
+  "duplicates_detected": 0,
+  "errors": [],
+  "preview_rows": [
+    {
+      "row": 2,
+      "action": "CREATE",
+      "patient_code": "P020",
+      "source_position": "demo.csv:row:2",
+      "data": {
+        "test_name": "creatinine",
+        "value": 0.8,
+        "unit": "mg/dL",
+        "observed_at": "2026-06-24T08:00:00+00:00"
+      }
+    }
+  ]
+}
+```
+
+## 21.2 Commit Lab CSV
+
+```http
+POST /api/import/labs/commit
+```
+
+The request shape is the same as preview. The response adds:
+
+```json
+{
+  "import_id": 1,
+  "committed": true,
+  "records_created": 1,
+  "duplicates_skipped": 0
+}
+```
+
+Invalid commits return `committed=false`, create an import batch error record, and do not write partial patient/lab data.
+
+## 21.3 Preview and Commit Documents JSON
+
+```http
+POST /api/import/documents/preview
+POST /api/import/documents/commit
+```
+
+Document JSON must use schema version `tracecare-documents-json-v1` and the fixed fields documented in `docs/IMPORT_FORMATS.md`.
+
+## 21.4 Import Errors
+
+```http
+GET /api/imports/{import_id}/errors
+```
+
+```json
+{
+  "import_id": 1,
+  "errors": [
+    {
+      "row": 2,
+      "field": "unit",
+      "code": "INVALID_UNIT",
+      "message": "Only mg/dL is supported."
+    }
+  ]
+}
+```
+
+## 21.5 Demo Management
+
+```http
+POST /api/development/reset-demo
+POST /api/development/seed-demo
+POST /api/development/run-demo-analysis
+```
+
+These endpoints are explicit prototype/development endpoints. Reset clears local synthetic demo data and import metadata. Seed imports bundled synthetic fixtures. Run demo analysis executes the existing deterministic lab, contradiction, and risk workflows.
+
 Optional request body:
 
 ```json

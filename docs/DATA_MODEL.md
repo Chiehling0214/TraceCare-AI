@@ -169,3 +169,29 @@ Returned transient fields include:
 | last_command | string, nullable | Last sanitized protocol command |
 | last_error | string, nullable | Sanitized device error code |
 | protocol_version | string | `tracecare-device-v1` |
+
+## Sprint 5 Import Metadata
+
+Sprint 5 adds `ImportBatch` for synthetic import audit metadata. Imported patient, lab, document, and fact records continue to use existing Sprint 0 and Sprint 1 tables.
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| id | integer | yes | Import batch ID |
+| import_kind | string | yes | `labs` or `documents` |
+| source_filename | string | yes | Submitted synthetic source filename |
+| schema_version | string | yes | Fixed schema version |
+| status | string | yes | `COMMITTED` or `FAILED` |
+| rows_received | integer | yes | Parsed input rows/documents |
+| records_created | integer | yes | Records created by commit |
+| duplicates_skipped | integer | yes | Existing DB duplicates skipped |
+| errors_json | text | yes | Structured import validation errors |
+| created_at | datetime | yes | Import time |
+
+Source tracking remains on existing fields:
+
+- `LabResult.source_document`
+- `ClinicalDocument.source_document`
+- `ClinicalFact.source_section`
+- `ClinicalFact.source_line`
+- `ClinicalFact.source_start_char`
+- `ClinicalFact.source_end_char`

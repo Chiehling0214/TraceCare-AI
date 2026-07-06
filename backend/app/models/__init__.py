@@ -3,6 +3,7 @@ from app.models.clinical_document import ClinicalDocument
 from app.models.clinical_fact import ClinicalFact
 from app.models.event_evidence import EventEvidence
 from app.models.event_action import EventAction
+from app.models.import_batch import ImportBatch
 from app.models.lab_result import LabResult
 from app.models.patient import Patient
 from app.models.summary_record import SummaryRecord
@@ -14,6 +15,7 @@ __all__ = [
     "EventEvidence",
     "EventAction",
     "EvidenceLink",
+    "ImportBatch",
     "LabResult",
     "Patient",
     "SummaryRecord",

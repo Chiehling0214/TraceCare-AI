@@ -1,0 +1,49 @@
+{
+  "schema_version": "tracecare-documents-json-v1",
+  "documents": [
+    {
+      "patient_code": "P010",
+      "display_name": "Synthetic Demo Patient 10",
+      "document_type": "ADMISSION_NOTE",
+      "title": "Synthetic demo admission note",
+      "source_document": "demo_admission_note_p010_20260623.txt",
+      "authored_at": "2026-06-23T09:00:00Z",
+      "facts": [
+        {
+          "fact_type": "ALLERGY_STATEMENT",
+          "subject": "penicillin",
+          "polarity": "PRESENT",
+          "value": "Allergy: Penicillin",
+          "status": "ACTIVE",
+          "source_section": "Allergies",
+          "source_line": 4,
+          "source_start_char": 10,
+          "source_end_char": 20,
+          "observed_at": "2026-06-23T09:00:00Z"
+        }
+      ]
+    },
+    {
+      "patient_code": "P010",
+      "display_name": "Synthetic Demo Patient 10",
+      "document_type": "MEDICATION_RECONCILIATION",
+      "title": "Synthetic demo medication reconciliation",
+      "source_document": "demo_medication_reconciliation_p010_20260623.txt",
+      "authored_at": "2026-06-23T10:00:00Z",
+      "facts": [
+        {
+          "fact_type": "ALLERGY_STATEMENT",
+          "subject": "penicillin",
+          "polarity": "NEGATED",
+          "value": "No known allergy to penicillin",
+          "status": "DENIED",
+          "source_section": "Medication Reconciliation",
+          "source_line": 6,
+          "source_start_char": 1,
+          "source_end_char": 31,
+          "observed_at": "2026-06-23T10:00:00Z"
+        }
+      ]
+    }
+  ]
+}

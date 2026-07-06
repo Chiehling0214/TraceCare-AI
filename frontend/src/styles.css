@@ -660,6 +660,39 @@ dd {
   font-family: "SFMono-Regular", Consolas, monospace;
 }
 
+.import-panel,
+.import-result {
+  display: grid;
+  gap: 14px;
+}
+
+.field-label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.field-label input,
+.field-label textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #111827;
+  background: #fff;
+  font: inherit;
+}
+
+.field-label textarea {
+  min-height: 220px;
+  resize: vertical;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .state-box {
   padding: 18px;
   border: 1px solid var(--border);

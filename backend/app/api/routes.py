@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.database import get_db
 from app.schemas.action import DeferEventRequest, EventActionsResponse
 from app.schemas.analysis import AnalysisRunResponse, ContradictionAnalysisRunResponse
@@ -9,6 +10,7 @@ from app.schemas.document import ClinicalDocumentListResponse, ClinicalDocumentO
 from app.schemas.event import EventActionResponse, EventDetail, EventListResponse
 from app.schemas.fact import ClinicalFactListResponse
 from app.schemas.graph import EvidenceGraphResponse
+from app.schemas.imports import DemoActionResponse, ImportCommitResponse, ImportErrorsResponse, ImportPayload, ImportPreviewResponse
 from app.schemas.lab import LabListResponse
 from app.schemas.patient import PatientDetail, PatientListResponse
 from app.schemas.risk import PatientRiskResponse, RiskEvaluationRequest, RiskEvaluationResponse
@@ -20,12 +22,19 @@ from app.services.device_service import get_device_health, get_device_state as b
 from app.services.errors import api_error
 from app.services.event_service import build_event_detail, get_event_or_404
 from app.services.graph_service import build_event_graph, build_patient_graph
+from app.services.import_service import commit_documents, commit_labs, import_errors, preview_documents, preview_labs
 from app.services.lifecycle_service import acknowledge_event, actions_for_event, defer_event, resolve_event
+from app.services.demo_service import reset_demo, run_demo_analysis, seed_demo
 from app.services.risk_service import patient_risk, run_risk_evaluation
 from app.services.rule_service import run_analysis
 from app.services.summary_service import generate_summary, get_summary, get_summary_evidence
 
 router = APIRouter(prefix="/api")
+
+
+def ensure_demo_management_enabled() -> None:
+    if not get_settings().demo_management_enabled:
+        raise api_error(403, "DEMO_MANAGEMENT_DISABLED", "Demo management endpoints are disabled.")
 
 
 @router.get("/patients", response_model=PatientListResponse, tags=["patients"])
@@ -202,3 +211,51 @@ def get_device_health_endpoint() -> dict[str, object]:
 @router.post("/device/reconnect", response_model=DeviceHealthResponse, tags=["device"])
 def post_device_reconnect() -> dict[str, object]:
     return reconnect_device()
+
+
+@router.post("/import/labs/preview", response_model=ImportPreviewResponse, tags=["import"])
+def post_labs_preview(payload: ImportPayload, db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_management_enabled()
+    return preview_labs(db, payload.source_filename, payload.content)
+
+
+@router.post("/import/labs/commit", response_model=ImportCommitResponse, tags=["import"])
+def post_labs_commit(payload: ImportPayload, db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_management_enabled()
+    return commit_labs(db, payload.source_filename, payload.content)
+
+
+@router.post("/import/documents/preview", response_model=ImportPreviewResponse, tags=["import"])
+def post_documents_preview(payload: ImportPayload, db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_management_enabled()
+    return preview_documents(db, payload.source_filename, payload.content)
+
+
+@router.post("/import/documents/commit", response_model=ImportCommitResponse, tags=["import"])
+def post_documents_commit(payload: ImportPayload, db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_management_enabled()
+    return commit_documents(db, payload.source_filename, payload.content)
+
+
+@router.get("/imports/{import_id}/errors", response_model=ImportErrorsResponse, tags=["import"])
+def get_import_errors(import_id: int, db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_management_enabled()
+    return import_errors(db, import_id)
+
+
+@router.post("/development/reset-demo", response_model=DemoActionResponse, tags=["development"])
+def post_reset_demo(db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_management_enabled()
+    return reset_demo(db)
+
+
+@router.post("/development/seed-demo", response_model=DemoActionResponse, tags=["development"])
+def post_seed_demo(db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_management_enabled()
+    return seed_demo(db)
+
+
+@router.post("/development/run-demo-analysis", response_model=DemoActionResponse, tags=["development"])
+def post_run_demo_analysis(db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_management_enabled()
+    return run_demo_analysis(db)

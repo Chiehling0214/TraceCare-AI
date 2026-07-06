@@ -1,0 +1,4 @@
+patient_code,display_name,test_name,value,unit,reference_min,reference_max,observed_at,source_document
+P010,Synthetic Demo Patient 10,creatinine,0.7,mg/dL,0.6,1.2,2026-06-22T08:00:00Z,demo_labs_20260622.csv
+P010,Synthetic Demo Patient 10,creatinine,1.2,mg/dL,0.6,1.2,2026-06-23T08:00:00Z,demo_labs_20260623.csv
+P011,Synthetic Demo Patient 11,creatinine,0.9,mg/dL,0.6,1.2,2026-06-22T08:00:00Z,demo_labs_20260622.csv

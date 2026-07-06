@@ -879,3 +879,21 @@ Generated or fallback text must not hide the original evidence. Existing labs, d
 ## 21.4 Safety
 
 The UI must label fallback/local-only behavior clearly and must not present summaries as diagnosis, treatment advice, or model-calculated risk.
+
+---
+
+# 22. Sprint 5 UI Addendum
+
+Sprint 5 adds a Demo Data Management page at `/demo-data`.
+
+Required UI behavior:
+
+- Show a visible warning that only synthetic data is allowed.
+- Provide lab CSV source filename and content inputs.
+- Provide clinical document JSON source filename and content inputs.
+- Preview buttons must call backend preview APIs.
+- Commit buttons must call backend commit APIs.
+- Show row counts, duplicate counts, schema version, validation errors, and preview row source positions.
+- Show reset, seed, and run-demo buttons that call backend development APIs.
+- Do not infer import success locally; display backend responses.
+- Do not support arbitrary PDF, Word, FHIR, or free-form document uploads.

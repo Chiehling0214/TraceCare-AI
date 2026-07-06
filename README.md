@@ -45,6 +45,7 @@ DEVICE_SERIAL_PORT=
 DEVICE_SERIAL_BAUD_RATE=115200
 DEVICE_SERIAL_TIMEOUT_SECONDS=1.0
 DEVICE_HEARTBEAT_TIMEOUT_SECONDS=3.0
+DEMO_MANAGEMENT_ENABLED=true
 ```
 
 Backend:
@@ -127,6 +128,26 @@ DEVICE_HEARTBEAT_TIMEOUT_SECONDS=3.0
 
 Do not hard-code a COM port in source code. Hardware failure or missing serial configuration does not block the dashboard; the backend returns `fallback_active=true` and the UI shows laptop fallback status. The command protocol is documented in `docs/DEVICE_PROTOCOL.md`, and the ESP32 sketch is tracked at `firmware/esp32_tracecare_alert/esp32_tracecare_alert.ino`.
 
+## Demo Data Management
+
+Sprint 5 adds fixed-schema synthetic import and repeatable demo management.
+
+```text
+DEMO_MANAGEMENT_ENABLED=true
+```
+
+Available local-only prototype workflows:
+
+- `POST /api/import/labs/preview`
+- `POST /api/import/labs/commit`
+- `POST /api/import/documents/preview`
+- `POST /api/import/documents/commit`
+- `POST /api/development/reset-demo`
+- `POST /api/development/seed-demo`
+- `POST /api/development/run-demo-analysis`
+
+The frontend Demo Data page is available at `/demo-data`. It warns against real patient data and calls backend preview/commit/reset/seed/run-demo APIs. Import schemas are documented in `docs/IMPORT_FORMATS.md`; demo fixtures are in `backend/app/seed/demo_labs.csv` and `backend/app/seed/demo_documents.json`.
+
 ## Frontend
 
 ```powershell
@@ -157,9 +178,11 @@ pytest
 10. In the Evidence-first Summary panel, click `病人摘要` or `交班摘要`.
 11. Confirm each returned sentence shows citation chips such as `lab:1`, `fact:1`, `event:1`, or `risk:1`.
 12. Confirm device state follows unified risk priority in simulated mode, or shows USB Serial health and laptop fallback when hardware is offline.
-13. Click `延後追蹤`; the event becomes `DEFERRED`, remains visible, and records a `DEFER` action.
-14. Click `確認事件`; buzzer changes to off through `ACKNOWLEDGED` and records an `ACKNOWLEDGE` action.
-15. Click `標示為已處理`; event becomes `RESOLVED`, records a `RESOLVE` action, and device state returns to `NORMAL` after all unresolved events are resolved.
+13. Open `/demo-data`, preview a synthetic lab CSV or document JSON import, and commit only after validation succeeds.
+14. Use Reset Demo, Seed Demo, and Run Demo Analysis to verify repeatable demo setup.
+15. Click `延後追蹤`; the event becomes `DEFERRED`, remains visible, and records a `DEFER` action.
+16. Click `確認事件`; buzzer changes to off through `ACKNOWLEDGED` and records an `ACKNOWLEDGE` action.
+17. Click `標示為已處理`; event becomes `RESOLVED`, records a `RESOLVE` action, and device state returns to `NORMAL` after all unresolved events are resolved.
 
 ## Notes
 
@@ -170,5 +193,6 @@ pytest
 - Sprint 3 summaries do not calculate risk or update events. Risk context comes from Sprint 2 deterministic services.
 - Every returned summary sentence must cite evidence IDs. Validation rejects missing citations and numeric mismatches.
 - Sprint 4 physical alerting is optional and local-only. It is a non-medical demo alert device and must not control any medical or treatment equipment.
+- Sprint 5 imports accept only fixed-schema synthetic CSV/JSON. Invalid imports return structured errors and do not commit partial data.
 - No external AI, medical, or hospital APIs are called.
 - Sprint 1 and Sprint 2 schema changes are additive. The prototype still uses SQLAlchemy `create_all`; Sprint 2 also includes a small additive SQLite migration helper for new nullable event lifecycle columns.

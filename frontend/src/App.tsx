@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { AppHeader } from "./components/AppHeader";
 import { PrototypeNotice } from "./components/PrototypeNotice";
+import { DemoDataPage } from "./pages/DemoDataPage";
 import { PatientDetailPage } from "./pages/PatientDetailPage";
 import { PatientOverviewPage } from "./pages/PatientOverviewPage";
 
@@ -15,13 +16,14 @@ export function App() {
   }, []);
 
   const match = path.match(/^\/patients\/(\d+)$/);
+  const isDemoData = path === "/demo-data";
 
   return (
     <>
       <AppHeader />
       <div className="container">
-        {!match && <PrototypeNotice />}
-        {match ? <PatientDetailPage patientId={Number(match[1])} /> : <PatientOverviewPage />}
+        {!match && !isDemoData && <PrototypeNotice />}
+        {match ? <PatientDetailPage patientId={Number(match[1])} /> : isDemoData ? <DemoDataPage /> : <PatientOverviewPage />}
       </div>
     </>
   );

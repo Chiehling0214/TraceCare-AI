@@ -187,3 +187,34 @@ Sprint 4 device output is a prototype alert display only. It must not control or
 | `WARNING` | `YELLOW_BLINKING` | `SHORT_BEEP` |
 | `ACKNOWLEDGED` | `YELLOW_SOLID` | `OFF` |
 | `CRITICAL` | `RED_BLINKING` | `INTERMITTENT` |
+
+## Sprint 5 Synthetic Import Rules
+
+Sprint 5 imports are fixed-schema and synthetic-only.
+
+### Lab CSV
+
+- Only `.csv` files are accepted by filename.
+- Required columns are defined by `tracecare-labs-csv-v1`.
+- `patient_code` must begin with `P`.
+- `test_name` must be `creatinine`.
+- `unit` must be `mg/dL`.
+- Numeric and datetime fields must parse before commit.
+- Duplicate rows inside one file are invalid.
+- Existing database duplicates are skipped with an explicit report.
+
+### Document JSON
+
+- Only `.json` files are accepted by filename.
+- `schema_version` must be `tracecare-documents-json-v1`.
+- Only fixed-format `documents[]` and structured `facts[]` are accepted.
+- `fact_type` is limited to `ALLERGY_STATEMENT`.
+- Source position fields are required and preserved.
+
+### Transaction Rule
+
+Import preview never writes patient, lab, document, fact, or event data. Import commit revalidates input and either commits all valid create/skip operations or records a failed import batch without partial imported records.
+
+### Demo Management
+
+Reset, seed, and run-demo endpoints are prototype/development-only. They must be repeatable and must not require manual database deletion.

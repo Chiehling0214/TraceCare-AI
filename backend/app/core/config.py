@@ -17,6 +17,7 @@ class Settings:
     device_serial_baud_rate: int
     device_serial_timeout_seconds: float
     device_heartbeat_timeout_seconds: float
+    demo_management_enabled: bool
 
     def __init__(self) -> None:
         self.database_url = os.getenv("DATABASE_URL", "sqlite:///./tracecare.db")
@@ -31,6 +32,7 @@ class Settings:
         self.device_serial_baud_rate = int(os.getenv("DEVICE_SERIAL_BAUD_RATE", "115200"))
         self.device_serial_timeout_seconds = float(os.getenv("DEVICE_SERIAL_TIMEOUT_SECONDS", "1.0"))
         self.device_heartbeat_timeout_seconds = float(os.getenv("DEVICE_HEARTBEAT_TIMEOUT_SECONDS", "3.0"))
+        self.demo_management_enabled = os.getenv("DEMO_MANAGEMENT_ENABLED", "true").lower() == "true"
 
 
 @lru_cache
