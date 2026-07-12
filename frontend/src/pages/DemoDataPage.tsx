@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { ApiRequestError } from "../api/client";
 import {
   commitDocumentImport,
   commitLabImport,
@@ -10,6 +11,7 @@ import {
   seedDemo
 } from "../api/imports";
 import { formatDateTime } from "../format";
+import { OfflineBanner } from "../components/States";
 import type { DemoActionResponse, ImportCommitResponse, ImportPreviewResponse } from "../types/imports";
 
 const LAB_EXAMPLE = `patient_code,display_name,test_name,value,unit,reference_min,reference_max,observed_at,source_document
@@ -56,10 +58,12 @@ export function DemoDataPage() {
   const [demoResult, setDemoResult] = useState<DemoActionResponse | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
 
   async function runImportAction(kind: ImportKind, action: "preview" | "commit") {
     setBusy(`${kind}-${action}`);
     setError(null);
+    setOffline(false);
     try {
       if (kind === "labs") {
         const payload = { source_filename: labFilename, content: labContent };
@@ -71,6 +75,7 @@ export function DemoDataPage() {
         );
       }
     } catch (err) {
+      setOffline(err instanceof ApiRequestError && err.code === "BACKEND_UNAVAILABLE");
       setError(err instanceof Error ? err.message : "Import action failed.");
     } finally {
       setBusy(null);
@@ -80,11 +85,13 @@ export function DemoDataPage() {
   async function runDemoAction(action: "reset" | "seed" | "run") {
     setBusy(`demo-${action}`);
     setError(null);
+    setOffline(false);
     try {
       if (action === "reset") setDemoResult(await resetDemo());
       if (action === "seed") setDemoResult(await seedDemo());
       if (action === "run") setDemoResult(await runDemoAnalysis());
     } catch (err) {
+      setOffline(err instanceof ApiRequestError && err.code === "BACKEND_UNAVAILABLE");
       setError(err instanceof Error ? err.message : "Demo action failed.");
     } finally {
       setBusy(null);
@@ -102,6 +109,7 @@ export function DemoDataPage() {
       <div className="message warning">
         只允許 synthetic data。不要上傳或貼上真實病人資料、真實病歷或可識別資訊。
       </div>
+      {offline && <OfflineBanner />}
       {error && <div className="message error">{error}</div>}
       <section className="panel">
         <div className="section-title">

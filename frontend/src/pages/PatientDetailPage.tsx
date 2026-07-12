@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { ApiRequestError } from "../api/client";
 import { fetchDeviceState } from "../api/device";
 import { fetchPatientDocuments, fetchPatientFacts } from "../api/documents";
 import { fetchEvent } from "../api/events";
@@ -11,7 +12,7 @@ import { ClinicalFactsPanel } from "../components/ClinicalFactsPanel";
 import { DeviceStateCard } from "../components/DeviceStateCard";
 import { EvidenceGraphPanel } from "../components/EvidenceGraphPanel";
 import { LabResultsTable } from "../components/LabResultsTable";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
+import { EmptyState, ErrorState, LoadingState, OfflineBanner } from "../components/States";
 import { PrototypeNotice } from "../components/PrototypeNotice";
 import { RiskBadge } from "../components/StatusBadges";
 import { SummaryPanel } from "../components/SummaryPanel";
@@ -35,11 +36,13 @@ export function PatientDetailPage({ patientId }: { patientId: number }) {
   const [device, setDevice] = useState<DeviceState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [busyEventId, setBusyEventId] = useState<number | null>(null);
 
   async function load() {
     setError(null);
+    setOffline(false);
     const [
       patientPayload,
       labsPayload,
@@ -70,7 +73,10 @@ export function PatientDetailPage({ patientId }: { patientId: number }) {
 
   useEffect(() => {
     load()
-      .catch(() => setError("資料載入失敗，請稍後再試。"))
+      .catch((err) => {
+        setOffline(err instanceof ApiRequestError && err.code === "BACKEND_UNAVAILABLE");
+        setError("資料載入失敗，請稍後再試。");
+      })
       .finally(() => setLoading(false));
   }, [patientId]);
 
@@ -79,14 +85,25 @@ export function PatientDetailPage({ patientId }: { patientId: number }) {
     setMessage(feedback);
   }
 
+  function retryLoad() {
+    setLoading(true);
+    load()
+      .catch((err) => {
+        setOffline(err instanceof ApiRequestError && err.code === "BACKEND_UNAVAILABLE");
+        setError("資料載入失敗，請稍後再試。");
+      })
+      .finally(() => setLoading(false));
+  }
+
   if (loading) return <LoadingState label="正在載入病人詳細資料…" />;
-  if (error || !patient) return <ErrorState label={error ?? "找不到指定病人。"} />;
+  if (error || !patient) return <ErrorState label={error ?? "找不到指定病人。"} onRetry={retryLoad} />;
 
   return (
     <main>
       <Link href="/" className="back-link">
         ← 返回病人總覽
       </Link>
+      {offline && <OfflineBanner />}
       <div className="detail-layout">
         <section className="panel">
           <div className="section-title">

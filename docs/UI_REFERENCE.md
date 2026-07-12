@@ -897,3 +897,17 @@ Required UI behavior:
 - Show reset, seed, and run-demo buttons that call backend development APIs.
 - Do not infer import success locally; display backend responses.
 - Do not support arbitrary PDF, Word, FHIR, or free-form document uploads.
+
+---
+
+# 23. Sprint 6 UI Addendum
+
+Sprint 6 hardens loading, empty, error, and offline states.
+
+Required UI behavior:
+
+- Overview, patient detail, and demo data pages must show retry controls after backend load failures.
+- Backend-unavailable errors must show a visible offline banner.
+- Frontend must not infer device LED or buzzer state locally.
+- Existing panels must continue to show backend-provided data when dependencies such as local LLM or ESP32 are unavailable.
+- Offline messaging must not hide prototype safety warnings or synthetic data labels.

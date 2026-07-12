@@ -1,6 +1,6 @@
 # TraceCare AI
 
-TraceCare AI is a local competition prototype for traceable clinical evidence and event lifecycle demonstration. Sprint 0 uses synthetic patients and deterministic creatinine trend rules to create review-required events. Sprint 1 adds fixed-format synthetic clinical documents, deterministic allergy contradiction detection, and an evidence graph. Sprint 2 adds deterministic risk fusion, event defer, timeout evaluation, and action history. Sprint 3 adds evidence-first local summary APIs with deterministic fallback, citation validation, and numeric consistency checks. Sprint 4 adds optional ESP32 USB Serial alerting while preserving simulated device mode.
+TraceCare AI is a local competition prototype for traceable clinical evidence and event lifecycle demonstration. Sprint 0 uses synthetic patients and deterministic creatinine trend rules to create review-required events. Sprint 1 adds fixed-format synthetic clinical documents, deterministic allergy contradiction detection, and an evidence graph. Sprint 2 adds deterministic risk fusion, event defer, timeout evaluation, and action history. Sprint 3 adds evidence-first local summary APIs with deterministic fallback, citation validation, and numeric consistency checks. Sprint 4 adds optional ESP32 USB Serial alerting while preserving simulated device mode. Sprint 5 adds fixed-schema synthetic import and repeatable demo management. Sprint 6 adds validation metrics, API-level demo tests, offline UI hardening, and demo runbook documentation. Sprint 7 packages the verified workflow into timed presenter scripts, judge Q&A, and a competition release checklist.
 
 This project is a competition prototype and is not a medical device.
 It must not be used for diagnosis or treatment decisions.
@@ -28,7 +28,7 @@ The default backend host port is `8001` because `8000` is commonly occupied on t
 docker compose up --build
 ```
 
-Open `http://localhost:5173`.
+Open the `FRONTEND_HOST_PORT` configured in root `.env`. The current repository setting is `http://localhost:5176`.
 
 Docker Compose reads the root `.env` file. To change ports, edit:
 
@@ -148,6 +148,18 @@ Available local-only prototype workflows:
 
 The frontend Demo Data page is available at `/demo-data`. It warns against real patient data and calls backend preview/commit/reset/seed/run-demo APIs. Import schemas are documented in `docs/IMPORT_FORMATS.md`; demo fixtures are in `backend/app/seed/demo_labs.csv` and `backend/app/seed/demo_documents.json`.
 
+## Sprint 6 Validation
+
+Run fixed synthetic validation metrics:
+
+```powershell
+cd backend
+set PYTHONPATH=D:\coding\TraceCare-AI\backend\.deps;D:\coding\TraceCare-AI\backend
+C:\Users\beard\anaconda3\python.exe -m app.sprint6_validation
+```
+
+The validation runner uses in-memory SQLite, deterministic fallback summaries, and simulated device mode. Results and limitations are documented in `docs/SPRINT_06_VALIDATION_RESULTS.md`. Demo operating steps and fallback procedures are documented in `docs/DEMO_RUNBOOK.md`.
+
 ## Frontend
 
 ```powershell
@@ -161,6 +173,14 @@ Open `http://127.0.0.1:5173`.
 
 ```powershell
 cd backend
+pytest
+```
+
+When using the repository-local `.deps` directory on this machine, run backend tests with the Python environment that matches the `.deps` compiled wheels:
+
+```powershell
+cd backend
+set PYTHONPATH=D:\coding\TraceCare-AI\backend\.deps;D:\coding\TraceCare-AI\backend
 pytest
 ```
 
@@ -183,6 +203,14 @@ pytest
 15. Click `延後追蹤`; the event becomes `DEFERRED`, remains visible, and records a `DEFER` action.
 16. Click `確認事件`; buzzer changes to off through `ACKNOWLEDGED` and records an `ACKNOWLEDGE` action.
 17. Click `標示為已處理`; event becomes `RESOLVED`, records a `RESOLVE` action, and device state returns to `NORMAL` after all unresolved events are resolved.
+
+For the full Sprint 6 operator sequence and failure fallback procedures, see `docs/DEMO_RUNBOOK.md`.
+
+## Competition Presentation
+
+- Timed 3-, 5-, and 10-minute presentation flow: `docs/DEMO_SCRIPT.md`
+- Judge-facing technical and safety answers: `docs/JUDGE_QA.md`
+- Preflight, expected states, failure recovery, and release gate: `docs/RELEASE_CHECKLIST.md`
 
 ## Notes
 

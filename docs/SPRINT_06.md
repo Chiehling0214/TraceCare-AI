@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Completed
 
 ## Background
 
@@ -168,6 +168,84 @@ If Sprint 5 already provides these, do not duplicate.
 - E2E tests cover the main story.
 - Known limitations are documented.
 - No new major feature work is introduced.
+
+## Implemented
+
+- Added fixed Sprint 6 validation fixture: `backend/app/sprint6_validation_fixture.json`.
+- Added validation runner: `python -m app.sprint6_validation`.
+- Added API-level end-to-end demo test covering reset, seed, run analysis, patient detail, evidence graph, event acknowledge/resolve, summary, and device state.
+- Added frontend backend-offline messaging and retry controls for overview/detail/demo pages.
+- Added demo runbook: `docs/DEMO_RUNBOOK.md`.
+- Added validation results summary: `docs/SPRINT_06_VALIDATION_RESULTS.md`.
+- Preserved Sprint 0 through Sprint 5 API behavior and data model.
+
+## Acceptance Results
+
+- Fixed validation dataset produces documented expected metrics: PASS.
+- E2E tests cover seed, analysis, patient detail, evidence, acknowledge, resolve, and device state: PASS via API-level E2E test.
+- Docker Compose starts frontend/backend from clean checkout: PASS.
+- Demo reset works: PASS.
+- Runbook documents normal flow and failure fallback: PASS.
+- Unimplemented metrics are explicitly marked not applicable or blocked: PASS.
+
+## Test Results
+
+- Baseline backend tests reached 53/53 `[100%]`; the pytest process still did not exit cleanly in the Windows shell, matching prior documented behavior.
+- Sprint 6 test file reached 2/2 `[100%]`; same shell exit limitation observed.
+- Frontend type check with `npx tsc --noEmit`: PASS.
+- Frontend build initially hit known `esbuild spawn EPERM` in sandbox; approved host execution passed with `cmd /c npm run build`.
+- Docker Compose config parsing passed.
+- Docker Compose build/start passed after Docker Desktop became available.
+- Docker health checks passed: backend `/health` returned 200 and frontend returned 200.
+- Docker demo smoke passed: reset deleted 5 patients, seed recreated 5 synthetic patients, run-demo-analysis created 3 events, P001 became `HIGH_RISK`, and simulated device state became `CRITICAL`.
+- Validation runner completed successfully with Anaconda Python 3.13 and existing `.deps`.
+
+## Benchmark Results
+
+Dataset: `tracecare-sprint6-validation-v1`.
+
+- RAPID_INCREASE rule: 5 cases, accuracy 1.0, precision 1.0, recall 1.0, F1 1.0.
+- ALLERGY_CONTRADICTION rule: 5 cases, accuracy 1.0, precision 1.0, recall 1.0, F1 1.0.
+- Event state synchronization: 6 acknowledge/resolve actions, success rate 1.0.
+- Summary validation: 2 cases, validation failure rate 0.0, abstention rate 0.5, evidence coverage 0.421053.
+- Simulated device state: 2 cases, success rate 1.0.
+- Run-demo analysis latency: 24.842 ms on in-memory SQLite.
+- ESP32 hardware latency: NOT VERIFIED.
+- Real local LLM inference metrics: NOT VERIFIED.
+
+## Demo Verification
+
+The API-level demo workflow resets demo data, seeds fixed synthetic patients, runs lab/contradiction/risk analysis, opens `P001`, verifies evidence graph availability, acknowledges and resolves an event, generates a deterministic fallback summary, and verifies simulated device state.
+
+Manual UI demo flow is documented in `docs/DEMO_RUNBOOK.md`.
+
+Docker demo smoke was verified with root `.env` ports `BACKEND_HOST_PORT=8001` and `FRONTEND_HOST_PORT=5176`.
+
+## Deviations
+
+- Browser-driven E2E tests were not added because the repository has no browser test harness or Playwright dependency. Sprint 6 adds API-level E2E coverage instead.
+- Validation report persistence remains file/document based, not database-backed.
+- CLI output file writing was blocked by sandbox permissions during this run, so measured results were captured from stdout and documented in `docs/SPRINT_06_VALIDATION_RESULTS.md`.
+
+## Technical Decisions
+
+- No core schema migration was added.
+- Metrics run against in-memory SQLite to avoid mutating local demo databases.
+- Validation code is kept outside API routes and product services.
+- Summary metrics use deterministic fallback to avoid external AI calls.
+- Device metrics use simulated adapter unless real ESP32 hardware is available.
+
+## Known Issues
+
+- Windows pytest process can display `[100%]` and remain running instead of exiting cleanly, matching previous sprint notes.
+- Vite build can fail with `esbuild spawn EPERM` under the current sandbox; Docker build or approved host execution is the workaround.
+- Real ESP32 and real local LLM validation were not performed in this Sprint 6 run.
+
+## Future Scope
+
+- Add browser E2E harness if future work continues beyond this roadmap.
+- Add persisted validation run records only if repeated benchmark history becomes necessary.
+- Re-run hardware and real local LLM validation on machines with those dependencies available.
 
 ## Next Sprint Dependency
 

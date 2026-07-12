@@ -75,6 +75,9 @@ def run_demo_analysis(db: Session) -> dict[str, object]:
         "events_escalated": int(risk_result["events_escalated"]),
         "duplicates_skipped": int(lab_result["events_skipped_as_duplicates"])
         + int(contradiction_result["events_skipped_as_duplicates"]),
+        "lab": lab_result,
+        "contradiction": contradiction_result,
+        "risk": risk_result,
         "created_at": datetime.now(timezone.utc),
     }
 

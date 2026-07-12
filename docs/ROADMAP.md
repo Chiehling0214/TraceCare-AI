@@ -36,7 +36,8 @@ Known Sprint 0 limits that affect future planning:
 | Sprint 3 | Evidence-first local LLM/RAG | 4-5 days | Add traceable local summaries with evidence packages and abstention | local LLM adapter, evidence package, citation checks, deterministic fallback |
 | Sprint 4 | ESP32 and physical alerting | 3-5 days | Add USB Serial hardware adapter while preserving simulation | serial adapter, heartbeat/offline/reconnect, fallback alerts, firmware |
 | Sprint 5 | Data import and demo dataset management | 3-5 days | Add fixed-schema synthetic import and repeatable demo flows | CSV/JSON import, validation preview, reset/seed/demo scripts |
-| Sprint 6 | Validation, deployment, demo hardening | 4-5 days | Stabilize, measure, and package demo | validation dataset, metrics, E2E tests, offline states, demo runbook |
+| Sprint 6 | Validation, deployment, demo hardening | Complete | Stabilize, measure, and package demo | validation dataset, metrics, API-level E2E tests, offline states, demo runbook, Docker smoke verification |
+| Sprint 7 | Competition demo and judge package | Complete | Make the verified prototype presentation-ready | timed demo scripts, judge Q&A, preflight/release checklist, failure recovery |
 
 ## Dependency Relationships
 
@@ -89,10 +90,16 @@ Sprint 5 deliverables:
 
 Sprint 6 deliverables:
 
-- Fixed validation dataset and metrics.
-- End-to-end tests.
-- Docker Compose hardening.
-- Demo runbook, reset script, and failure fallback procedures.
+- Fixed validation dataset and metrics completed in `backend/app/sprint6_validation_fixture.json` and `python -m app.sprint6_validation`.
+- API-level end-to-end demo tests.
+- Frontend offline/retry hardening.
+- Demo runbook and failure fallback procedures.
+
+Sprint 7 deliverables:
+
+- Presenter scripts for 3-, 5-, and 10-minute competition demos.
+- Judge-facing Q&A with explicit technical and safety boundaries.
+- Release/preflight checklist with expected UI states and recovery procedures.
 
 ## Competition Demo vs Future Scope
 
@@ -124,7 +131,7 @@ Future Scope:
 - No arbitrary PDF or Word parsing.
 - No FHIR implementation.
 - No control of medical devices, infusion pumps, ventilators, or therapy systems.
-- No Sprint 7 or later work items.
+- No Sprint 8 or later product functionality is implemented by this roadmap checkpoint.
 
 ## Highest-Risk Sprints
 

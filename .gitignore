@@ -32,3 +32,5 @@ htmlcov/
 *.log
 
 .deps/
+
+.tmp_pdf_deps/

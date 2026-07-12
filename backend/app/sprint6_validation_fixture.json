@@ -1,0 +1,29 @@
+{
+  "dataset_id": "tracecare-sprint6-validation-v1",
+  "description": "Fixed synthetic validation expectations for Sprint 6 demo hardening.",
+  "synthetic_only": true,
+  "expected_patients_after_seed_demo": ["P001", "P002", "P003", "P010", "P011"],
+  "rapid_increase_expected": {
+    "P001": true,
+    "P002": false,
+    "P003": false,
+    "P010": false,
+    "P011": false
+  },
+  "contradiction_expected": {
+    "P001": true,
+    "P002": false,
+    "P003": false,
+    "P010": true,
+    "P011": false
+  },
+  "summary_cases": [
+    {"patient_code": "P001", "summary_kind": "patient", "expected_status": "FALLBACK"},
+    {"patient_code": "P003", "summary_kind": "handoff", "expected_status": "ABSTAINED"}
+  ],
+  "device_cases": [
+    {"phase": "after_analysis", "expected_state": "CRITICAL", "expected_fallback_active": false},
+    {"phase": "after_resolve_all", "expected_state": "NORMAL", "expected_fallback_active": false}
+  ]
+}
+

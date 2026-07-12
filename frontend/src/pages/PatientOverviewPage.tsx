@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { runContradictionAnalysis, runPrototypeAnalysis, runRiskEvaluation } from "../api/analysis";
+import { ApiRequestError } from "../api/client";
 import { fetchDeviceState } from "../api/device";
 import { fetchPatients } from "../api/patients";
 import { DeviceStateCard } from "../components/DeviceStateCard";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
+import { EmptyState, ErrorState, LoadingState, OfflineBanner } from "../components/States";
 import { PatientTable } from "../components/PatientTable";
 import type { DeviceState } from "../types/device";
 import type { PatientSummary } from "../types/patient";
@@ -15,10 +16,12 @@ export function PatientOverviewPage() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   async function load() {
     setError(null);
+    setOffline(false);
     const [patientsPayload, devicePayload] = await Promise.all([fetchPatients(), fetchDeviceState()]);
     setPatients(patientsPayload.items);
     setDevice(devicePayload);
@@ -26,7 +29,10 @@ export function PatientOverviewPage() {
 
   useEffect(() => {
     load()
-      .catch(() => setError("資料載入失敗，請稍後再試。"))
+      .catch((err) => {
+        setOffline(err instanceof ApiRequestError && err.code === "BACKEND_UNAVAILABLE");
+        setError("資料載入失敗，請稍後再試。");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -53,15 +59,26 @@ export function PatientOverviewPage() {
           `略過重複 ${result.events_skipped_as_duplicates + contradictionResult.events_skipped_as_duplicates} 筆；` +
           `風險評估 ${riskResult.patients_evaluated} 人、逾時升級 ${riskResult.events_escalated} 筆。`
       );
-    } catch {
+    } catch (err) {
+      setOffline(err instanceof ApiRequestError && err.code === "BACKEND_UNAVAILABLE");
       setError("分析執行失敗，請檢查後端服務。");
     } finally {
       setRunning(false);
     }
   }
 
+  function retryLoad() {
+    setLoading(true);
+    load()
+      .catch((err) => {
+        setOffline(err instanceof ApiRequestError && err.code === "BACKEND_UNAVAILABLE");
+        setError("資料載入失敗，請稍後再試。");
+      })
+      .finally(() => setLoading(false));
+  }
+
   if (loading) return <LoadingState label="正在載入病人資料…" />;
-  if (error && patients.length === 0) return <ErrorState label={error} />;
+  if (error && patients.length === 0) return <ErrorState label={error} onRetry={retryLoad} />;
 
   return (
     <main>
@@ -74,6 +91,7 @@ export function PatientOverviewPage() {
           {running ? "分析中…" : "執行原型分析"}
         </button>
       </div>
+      {offline && <OfflineBanner />}
       {message && <div className="message success">{message}</div>}
       {error && <div className="message error">{error}</div>}
       <section className="summary-grid">
