@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+In Progress
 
 ## Background
 
@@ -147,17 +147,58 @@ No migration.
 
 ## Deviations
 
-TBD.
+- A real GCE VM was not provisioned because the implementation environment has no `gcloud` CLI, configured Google Cloud project, credentials, or billing authority. Cloud-dependent Acceptance Criteria remain `NOT VERIFIED`.
+- HTTPS and reverse proxy automation remain out of scope. The documented direct-port demo restricts ingress by presenter/judge source CIDR.
+- Sprint 7 documentation exists at Git checkpoint `c93107a`, but `docs/SPRINT_07.md` still records its own status as `In Progress`; Sprint 8 does not rewrite that prior sprint's verification history.
 
 ## Technical Decisions
 
-TBD.
+- Use `.env.gce.example` plus `docker-compose.gce.yml` instead of changing the locally verified base Compose behavior.
+- Default GCE to `LLM_MODE=disabled` and deterministic fallback. Ollama CPU/GPU paths are optional decisions requiring separate Sprint 9 verification.
+- Force `DEVICE_ADAPTER_MODE=simulated` on GCE because a cloud VM cannot control an ESP32 attached to the presenter's computer.
+- Add container restart policies and health checks only in the GCE override.
+- Expose frontend and backend directly for the bounded demo, but require source-CIDR firewall restrictions because authentication/RBAC is not implemented.
 
 ## Known Issues
 
-TBD.
+- Real GCE creation, remote frontend/backend access, reset/seed/run, and fallback behavior are `NOT VERIFIED`.
+- Direct HTTP has no transport encryption and is suitable only for synthetic competition data on a restricted firewall rule.
+- Development demo-management endpoints are unauthenticated; they must not be exposed broadly.
+- CPU Ollama latency and GPU quota/cost are not measured.
+- The base frontend container runs Vite's development server; Sprint 8 preserves it for compatibility rather than claiming production-grade serving.
+
+## Implemented
+
+- Added `.env.gce.example` with cloud-safe app-only defaults and public-origin placeholders.
+- Added `docker-compose.gce.yml` with restart policies, backend/frontend health checks, dependency health gating, and Linux host-gateway mapping for optional Ollama.
+- Added `scripts/gce-smoke.sh` covering health, frontend load, reset, seed, deterministic analysis, patient fixture, and simulated device state.
+- Added `docs/GCE_DEPLOYMENT.md` covering VM sizing, firewall rules, Docker install, deployment, smoke, model options, backup, recovery, cost control, and teardown.
+- Added README and roadmap deployment references.
+
+## Acceptance Results
+
+- GCE deployment instructions are complete enough to reproduce: PASS by documentation review; real execution pending.
+- Frontend is reachable from the intended demo machine: NOT VERIFIED.
+- Backend health returns 200 on GCE: NOT VERIFIED.
+- Demo reset/seed/run works on GCE: NOT VERIFIED.
+- Teardown and cost-control steps are documented: PASS.
+- Deterministic fallback is documented for app-only GCE: PASS; GCE execution NOT VERIFIED.
+
+## Test Results
+
+- Base `docker compose config`: PASS before implementation.
+- `docker compose -f docker-compose.yml -f docker-compose.gce.yml --env-file .env.gce.example config`: PASS; GCE environment, health checks, restart policies, dependency health gate, ports, and host gateway resolved correctly.
+- Backend regression tests: PASS, 55 tests in 7.70 seconds; two existing FastAPI `on_event` deprecation warnings.
+- Frontend `npx tsc --noEmit`: PASS.
+- Frontend `npm run build`: PASS; Vite transformed 58 modules and completed in 6.43 seconds.
+- `git diff --check`: PASS.
+- Smoke script API fields were checked against current health, patient-list, and device-state schemas: PASS.
+- Native shell syntax execution: NOT VERIFIED because WSL bash startup was denied in the implementation environment; the script uses Bash strict mode and standard `curl`, `mktemp`, and Python 3 facilities available in the documented Ubuntu target.
+- The first local Docker attempt was blocked because Docker Desktop was not running. After Docker Desktop started, `docker compose -f docker-compose.yml -f docker-compose.gce.yml up --build -d` passed and both containers became healthy.
+- Local backend/frontend smoke: PASS; backend `/health` returned `ok` and frontend returned HTTP 200.
+- Local synthetic demo workflow: PASS; reset, seed, and deterministic analysis produced 5 patients, P001 `HIGH_RISK`, P010 `REVIEW_REQUIRED`, and backend device state `CRITICAL` with the `simulated` adapter.
+- Real GCE smoke: NOT VERIFIED because no cloud environment was available.
 
 ## Next Sprint Dependency
 
 Sprint 9 local LLM verification may reuse GCE deployment only if the selected VM has enough resources.
-

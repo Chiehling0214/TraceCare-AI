@@ -38,6 +38,7 @@ Known Sprint 0 limits that affect future planning:
 | Sprint 5 | Data import and demo dataset management | 3-5 days | Add fixed-schema synthetic import and repeatable demo flows | CSV/JSON import, validation preview, reset/seed/demo scripts |
 | Sprint 6 | Validation, deployment, demo hardening | Complete | Stabilize, measure, and package demo | validation dataset, metrics, API-level E2E tests, offline states, demo runbook, Docker smoke verification |
 | Sprint 7 | Competition demo and judge package | Complete | Make the verified prototype presentation-ready | timed demo scripts, judge Q&A, preflight/release checklist, failure recovery |
+| Sprint 8 | GCE demo deployment | In Progress | Provide a reproducible remote backup-demo deployment | GCE runbook, environment template, Compose health checks, smoke and teardown workflow |
 
 ## Dependency Relationships
 
@@ -101,6 +102,13 @@ Sprint 7 deliverables:
 - Judge-facing Q&A with explicit technical and safety boundaries.
 - Release/preflight checklist with expected UI states and recovery procedures.
 
+Sprint 8 deliverables:
+
+- GCE VM/firewall/Docker deployment runbook and cost-control teardown steps.
+- GCE-specific environment template and Compose health/restart override.
+- Executable synthetic reset/seed/analysis cloud smoke test.
+- Real GCE verification remains required before Sprint 8 can be marked complete.
+
 ## Competition Demo vs Future Scope
 
 Competition Demo scope:
@@ -131,7 +139,7 @@ Future Scope:
 - No arbitrary PDF or Word parsing.
 - No FHIR implementation.
 - No control of medical devices, infusion pumps, ventilators, or therapy systems.
-- No Sprint 8 or later product functionality is implemented by this roadmap checkpoint.
+- No Sprint 9 or later product functionality is implemented by this roadmap checkpoint.
 
 ## Highest-Risk Sprints
 

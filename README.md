@@ -212,6 +212,23 @@ For the full Sprint 6 operator sequence and failure fallback procedures, see `do
 - Judge-facing technical and safety answers: `docs/JUDGE_QA.md`
 - Preflight, expected states, failure recovery, and release gate: `docs/RELEASE_CHECKLIST.md`
 
+## GCE Demo Deployment
+
+Sprint 8 deployment assets provide an app-only GCE backup-demo path with deterministic summary fallback:
+
+- Environment template: `.env.gce.example`
+- GCE Compose health/restart override: `docker-compose.gce.yml`
+- Synthetic reset/seed/analysis smoke test: `scripts/gce-smoke.sh`
+- VM, firewall, Docker, backup, cost-control, and teardown runbook: `docs/GCE_DEPLOYMENT.md`
+
+Use both Compose files on the VM:
+
+```bash
+sudo docker compose -f docker-compose.yml -f docker-compose.gce.yml up --build -d
+```
+
+The direct-port deployment is competition-demo infrastructure, not a production deployment. Restrict ports `5176` and `8001` to the intended presenter/judge source CIDR because formal authentication is outside the current scope.
+
 ## Notes
 
 - Acknowledging an already acknowledged event returns the current state with `200 OK`.
